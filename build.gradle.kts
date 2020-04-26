@@ -4,6 +4,9 @@ plugins {
     kotlin("kapt") version kotlinVersion
 }
 
+group = "at.fhooe.hagenberg"
+version = "1.0.0"
+
 repositories {
     mavenCentral()
 }
