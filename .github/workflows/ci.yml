@@ -19,7 +19,7 @@ jobs:
       - name: Restore Gradle wrapper from cache
         uses: actions/cache@v1
         with:
-          path: ~/.gradlew/wrapper
+          path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle.properties') }}
       - name: Restore Gradle cache
         uses: actions/cache@v1
