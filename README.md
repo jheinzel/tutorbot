@@ -1,3 +1,6 @@
+[![Build Status](https://github.com/simonschiller/tutorbot/workflows/CI/badge.svg)](https://github.com/simonschiller/tutorbot/actions) 
+[![GitHub Release](https://img.shields.io/github/release/simonschiller/tutorbot.svg)](https://github.com/simonschiller/tutorbot/releases) 
+
 # Tutorbot
 
 Tutorbot is a simple command line tool that helps programming tutors at the University of Applied Sciences in Hagenberg by automating repetitive tasks. 
