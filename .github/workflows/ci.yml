@@ -6,7 +6,8 @@ on:
       - master
 
 jobs:
-  build:
+  test:
+    name: "Test"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -15,7 +16,5 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Build
-        run: ./gradlew jar
       - name: Test
         run: ./gradlew test
