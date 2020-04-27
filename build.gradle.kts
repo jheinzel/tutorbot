@@ -61,9 +61,13 @@ tasks {
     }
 
     jar {
+        archiveFileName.set("tutorbot.jar")
         from(configurations.runtimeClasspath.get().map { file -> if (file.isDirectory) file else zipTree(file) })
         manifest {
-            attributes("Main-Class" to "at.fhooe.hagenberg.tutorbot.Tutorbot")
+            attributes(
+                "Main-Class" to "at.fhooe.hagenberg.tutorbot.Tutorbot",
+                "Implementation-Version" to archiveVersion
+            )
         }
     }
 }

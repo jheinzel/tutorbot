@@ -5,7 +5,7 @@ import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
 import io.mockk.*
-import junit.framework.Assert.assertTrue
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

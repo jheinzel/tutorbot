@@ -12,7 +12,8 @@ import kotlin.system.exitProcess
         SubmissionsCommand::class,
         ReviewsCommand::class,
         MailCommand::class,
-        InstructionsCommand::class
+        InstructionsCommand::class,
+        VersionCommand::class
     ]
 )
 object Tutorbot : Runnable {
