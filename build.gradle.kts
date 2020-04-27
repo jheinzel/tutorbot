@@ -4,6 +4,9 @@ plugins {
     kotlin("kapt") version kotlinVersion
 }
 
+group = "at.fhooe.hagenberg"
+version = "1.0.0"
+
 repositories {
     mavenCentral()
 }
@@ -58,9 +61,13 @@ tasks {
     }
 
     jar {
+        archiveFileName.set("tutorbot.jar")
         from(configurations.runtimeClasspath.get().map { file -> if (file.isDirectory) file else zipTree(file) })
         manifest {
-            attributes("Main-Class" to "at.fhooe.hagenberg.tutorbot.Tutorbot")
+            attributes(
+                "Main-Class" to "at.fhooe.hagenberg.tutorbot.Tutorbot",
+                "Implementation-Version" to archiveVersion
+            )
         }
     }
 }
