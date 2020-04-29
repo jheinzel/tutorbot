@@ -1,8 +1,8 @@
 name: "Release"
 on:
-  release:
-    types:
-    - created
+  push:
+    tags:
+    - 'v*'
   
 jobs:
   release:
@@ -29,17 +29,22 @@ jobs:
             ${{ runner.os }}-gradle-caches-
       - name: Build
         run: ./gradlew jar
-      - name: Get release info
-        id: get_release_info
-        uses: bruceadams/get-release@v1
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
       - name: Upload JAR
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./build/libs/tutorbot.jar
           asset_name: tutorbot.jar
           asset_content_type: application/java-archive
