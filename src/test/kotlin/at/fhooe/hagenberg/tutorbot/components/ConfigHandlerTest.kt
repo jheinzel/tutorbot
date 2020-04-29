@@ -15,6 +15,7 @@ class ConfigHandlerTest {
         assertEquals("config-username", configHandler.getUsername())
         assertEquals("config-location-submissions", configHandler.getSubmissionsDownloadLocation())
         assertEquals("config-location-reviews", configHandler.getReviewsDownloadLocation())
+        assertEquals("config-plagiarism-language-java-version", configHandler.getJavaLanguageLevel())
     }
 
     @Test
@@ -25,6 +26,7 @@ class ConfigHandlerTest {
         assertEquals("config-username", configHandler.getUsername())
         assertNull(configHandler.getSubmissionsDownloadLocation())
         assertNull(configHandler.getReviewsDownloadLocation())
+        assertNull(configHandler.getJavaLanguageLevel())
     }
 
     @Test
@@ -35,5 +37,6 @@ class ConfigHandlerTest {
         assertNull(configHandler.getUsername())
         assertNull(configHandler.getSubmissionsDownloadLocation())
         assertNull(configHandler.getReviewsDownloadLocation())
+        assertNull(configHandler.getJavaLanguageLevel())
     }
 }

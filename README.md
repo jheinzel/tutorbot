@@ -27,6 +27,9 @@ location.submissions=/foo/bar/submissions
 
 # Download location for reviews
 location.reviews=/foo/bar/reviews
+
+# Java language version used by JPlag for plagiarism detection (default is Java 1.9)
+plagiarism.language.java.version=java19
 ```
 
 For Tutorbot to detect this file, it should be located in the same directory as the `tutorbot.jar` and should be called `tutorbot.properties`.

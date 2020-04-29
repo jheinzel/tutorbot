@@ -7,14 +7,17 @@ import jplag.options.CommandLineOptions
 import java.io.File
 import javax.inject.Inject
 
-class PlagiarismChecker @Inject constructor(private val jplagWrapper: JplagWrapper) {
+class PlagiarismChecker @Inject constructor(
+    private val jplagWrapper: JplagWrapper,
+    private val configHandler: ConfigHandler
+) {
 
     fun generatePlagiarismReport(submissionDirectory: File) {
         val language = detectSubmissionLanguage(submissionDirectory)
         val reportDirectory = File(submissionDirectory, "plagiarism-report")
         val args = arrayOf("-l", language, "-r", reportDirectory.absolutePath, "-s", submissionDirectory.absolutePath)
 
-        // Capture output while running Jplag
+        // Capture output while running JPlag
         runWithCapturedOutput {
             jplagWrapper.run(args)
         }
@@ -25,7 +28,7 @@ class PlagiarismChecker @Inject constructor(private val jplagWrapper: JplagWrapp
     private fun detectSubmissionLanguage(submissionDirectory: File): String {
         val extensions = submissionDirectory.walkTopDown().filter(File::isFile).map { file -> file.extension }
         return when {
-            extensions.contains("java") -> "java11"
+            extensions.contains("java") -> configHandler.getJavaLanguageLevel() ?: "java19"
             extensions.contains("cpp") || extensions.contains("h") || extensions.contains("c") -> "c/c++"
             else -> exitWithError("Could not detect programming language for plagiarism detection")
         }
