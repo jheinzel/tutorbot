@@ -1,5 +1,6 @@
-[![Build Status](https://github.com/simonschiller/tutorbot/workflows/CI/badge.svg)](https://github.com/simonschiller/tutorbot/actions) 
-[![GitHub Release](https://img.shields.io/github/release/simonschiller/tutorbot.svg)](https://github.com/simonschiller/tutorbot/releases) 
+[![Build Status](https://img.shields.io/github/workflow/status/simonschiller/tutorbot/CI)](https://github.com/simonschiller/tutorbot/actions) 
+[![GitHub Release](https://img.shields.io/github/v/release/simonschiller/tutorbot)](https://github.com/simonschiller/tutorbot/releases)
+[![License](https://img.shields.io/github/license/simonschiller/tutorbot)](https://github.com/simonschiller/tutorbot/blob/master/LICENSE)
 
 # Tutorbot
 
