@@ -22,6 +22,10 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
         return properties.getProperty("location.reviews")
     }
 
+    fun getJavaLanguageLevel(): String? {
+        return properties.getProperty("plagiarism.language.java.version")
+    }
+
     private fun parseProperties(config: File): Properties {
         val properties = Properties()
 

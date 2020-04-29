@@ -25,6 +25,11 @@ interface CommandsModule {
 
     @Binds
     @IntoMap
+    @CommandKey(PlagiarismCommand::class)
+    fun bindPlagiarismCommand(command: PlagiarismCommand): BaseCommand
+
+    @Binds
+    @IntoMap
     @CommandKey(ReviewsCommand::class)
     fun bindReviewsCommand(command: ReviewsCommand): BaseCommand
 
@@ -32,4 +37,9 @@ interface CommandsModule {
     @IntoMap
     @CommandKey(SubmissionsCommand::class)
     fun bindSubmissionsCommand(command: SubmissionsCommand): BaseCommand
+
+    @Binds
+    @IntoMap
+    @CommandKey(VersionCommand::class)
+    fun bindVersionCommand(command: VersionCommand): BaseCommand
 }

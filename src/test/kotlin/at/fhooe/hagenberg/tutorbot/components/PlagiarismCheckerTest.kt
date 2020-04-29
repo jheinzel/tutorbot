@@ -14,9 +14,10 @@ import java.nio.file.Paths
 
 class PlagiarismCheckerTest : CommandLineTest() {
     private val jplagWrapper = mockk<PlagiarismChecker.JplagWrapper>()
+    private val configHandler = mockk<ConfigHandler>()
     private val args = slot<Array<String>>()
 
-    private val plagiarismChecker = PlagiarismChecker(jplagWrapper)
+    private val plagiarismChecker = PlagiarismChecker(jplagWrapper, configHandler)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -40,6 +41,16 @@ class PlagiarismCheckerTest : CommandLineTest() {
 
     @Test
     fun `Java is detected correctly`() {
+        every { configHandler.getJavaLanguageLevel() } returns null
+        File(fileSystem.directory, "test.java").createNewFile()
+        plagiarismChecker.generatePlagiarismReport(fileSystem.directory)
+
+        assertTrue(args.captured.joinToString(separator = " ").contains("-l java19"))
+    }
+
+    @Test
+    fun `Java language version from config is used if available`() {
+        every { configHandler.getJavaLanguageLevel() } returns "java11"
         File(fileSystem.directory, "test.java").createNewFile()
         plagiarismChecker.generatePlagiarismReport(fileSystem.directory)
 
