@@ -26,8 +26,10 @@ class MailClient @Inject constructor(
         message.subject = mail.subject
 
         // Build the message body with all attachments
+        val body = MimeBodyPart().apply { setText(mail.body) }
         val attachment = MimeBodyPart().apply { attachFile(mail.attachment) }
         val multipart = MimeMultipart().apply {
+            addBodyPart(body)
             addBodyPart(attachment)
         }
         message.setContent(multipart)
@@ -47,5 +49,6 @@ class MailClient @Inject constructor(
     data class Mail(val from: String,
                     val to: List<String>,
                     val subject: String,
+                    val body: String,
                     val attachment: File)
 }

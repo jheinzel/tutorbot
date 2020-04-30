@@ -6,6 +6,7 @@ import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.network.MailClient
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
+import at.fhooe.hagenberg.tutorbot.util.promptMultilineTextInput
 import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.File
@@ -27,6 +28,7 @@ class MailCommand @Inject constructor(
 
         // Read sender information from the user
         val subject = promptTextInput("Enter E-Mail subject:")
+        val body = promptMultilineTextInput("Enter E-Mail body:")
         val from = getEmail(credentialStore.getUsername())
         credentialStore.getPassword() // Make sure the password is entered by the user
 
@@ -40,7 +42,7 @@ class MailCommand @Inject constructor(
         // Construct all the mail messages
         val mails = files.map { pdf ->
             val (submitter, reviewer) = pdf.nameWithoutExtension.split("-")
-            MailClient.Mail(from, listOf(getEmail(submitter), getEmail(reviewer)), subject, pdf)
+            MailClient.Mail(from, listOf(getEmail(submitter), getEmail(reviewer)), subject, body, pdf)
         }
 
         // Confirm before sending messages -> just to be safe

@@ -38,7 +38,7 @@ class MailCommandTest : CommandLineTest() {
 
     @Test
     fun `Messages are sent correctly`() {
-        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "Yes")
+        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "Body", "Yes")
 
         mailCommand.execute()
         verifySentMails()
@@ -47,7 +47,7 @@ class MailCommandTest : CommandLineTest() {
     @Test
     fun `Files of wrong type are ignored`() {
         File(ClassLoader.getSystemResource("zip/pdfs.zip").toURI()).copyTo(File(fileSystem.directory, "pdfs.zip"))
-        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "Yes")
+        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "Body", "Yes")
 
         mailCommand.execute()
         verifySentMails()
@@ -55,7 +55,7 @@ class MailCommandTest : CommandLineTest() {
 
     @Test
     fun `Messages are not sent if not confirmed`() {
-        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "No")
+        systemIn.provideLines(fileSystem.directory.absolutePath, "Subject", "Body", "No")
 
         mailCommand.execute()
         confirmVerified(mailClient)
@@ -64,7 +64,7 @@ class MailCommandTest : CommandLineTest() {
     @Test
     fun `Reviews directory is read from config`() {
         every { configHandler.getReviewsDownloadLocation() } returns fileSystem.directory.absolutePath
-        systemIn.provideLines("Subject", "Yes")
+        systemIn.provideLines("Subject", "Body", "Yes")
 
         mailCommand.execute()
         verifySentMails()
@@ -80,7 +80,7 @@ class MailCommandTest : CommandLineTest() {
     }
 
     private fun verifySentMails() {
-        val mail = MailClient.Mail("S0@students.fh-hagenberg.at", emptyList(), "Subject", fileSystem.file)
+        val mail = MailClient.Mail("S0@students.fh-hagenberg.at", emptyList(), "Subject", "Body", fileSystem.file)
 
         val firstMail = mail.copy(
             to = listOf("S1@students.fh-hagenberg.at", "S2@students.fh-hagenberg.at"),
