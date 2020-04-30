@@ -8,6 +8,11 @@ fun promptTextInput(prompt: String): String {
     return readLine() ?: ""
 }
 
+fun promptMultilineTextInput(prompt: String): String {
+    val textInput = promptTextInput("$prompt (use <br/> for line breaks)")
+    return textInput.trim().replace("<br/>", System.lineSeparator())
+}
+
 fun promptPasswordInput(prompt: String): String {
     print("$prompt ")
     return System.console().readPassword().joinToString(separator = "")

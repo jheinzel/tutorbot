@@ -32,7 +32,7 @@ class MailClientTest {
 
     @Test
     fun `Mail server settings are configured correctly`() {
-        val mail = MailClient.Mail("from@mail.com", listOf(), "", File(""))
+        val mail = MailClient.Mail("from@mail.com", listOf(), "", "", File(""))
         mailClient.sendMail(mail)
         val session = mailSlot.captured.session
 
@@ -46,7 +46,7 @@ class MailClientTest {
     @Test
     fun `Mails get sent correctly`() {
         val attachment = File(ClassLoader.getSystemResource("websites/Blank.html").toURI())
-        val mail = MailClient.Mail("from@mail.com", listOf("a@mail.com", "b@mail.net"), "Subject", attachment)
+        val mail = MailClient.Mail("from@mail.com", listOf("a@mail.com", "b@mail.net"), "Subject", "Body", attachment)
 
         mailClient.sendMail(mail)
         val message = mailSlot.captured
@@ -57,6 +57,7 @@ class MailClientTest {
         assertEquals("Subject", message.subject)
 
         val multipart = message.content as MimeMultipart
-        assertEquals("Blank.html", multipart.getBodyPart(0).fileName)
+        assertEquals("Body", multipart.getBodyPart(0).content)
+        assertEquals("Blank.html", multipart.getBodyPart(1).fileName)
     }
 }

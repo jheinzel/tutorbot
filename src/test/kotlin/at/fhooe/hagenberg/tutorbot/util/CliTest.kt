@@ -34,6 +34,14 @@ class CliTest : CommandLineTest() {
     }
 
     @Test
+    fun `Multiline text prompts work correctly`() {
+        val newline = System.lineSeparator()
+        systemIn.provideLines("This<br/>is<br/>a<br/>multiline<br/>text")
+        assertEquals("This${newline}is${newline}a${newline}multiline${newline}text", promptMultilineTextInput("Enter:"))
+        assertEquals("Enter: (use <br/> for line breaks) ", systemOut.log)
+    }
+
+    @Test
     fun `Password prompts work correctly`() {
         every { console.readPassword() } returns "Password".toCharArray()
         assertEquals("Password", promptPasswordInput("Enter:"))
