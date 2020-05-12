@@ -10,21 +10,10 @@ import javax.inject.Singleton
 class ConfigHandler @Inject constructor(@Named("config") config: File) {
     private val properties by lazy { parseProperties(config) }
 
-    fun getUsername(): String? {
-        return properties.getProperty("username")
-    }
-
-    fun getSubmissionsDownloadLocation(): String? {
-        return properties.getProperty("location.submissions")
-    }
-
-    fun getReviewsDownloadLocation(): String? {
-        return properties.getProperty("location.reviews")
-    }
-
-    fun getJavaLanguageLevel(): String? {
-        return properties.getProperty("plagiarism.language.java.version")
-    }
+    fun getUsername(): String? = getProperty("username")
+    fun getSubmissionsDownloadLocation(): String? = getProperty("location.submissions")
+    fun getReviewsDownloadLocation(): String? = getProperty("location.reviews")
+    fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
 
     private fun parseProperties(config: File): Properties {
         val properties = Properties()
@@ -38,5 +27,16 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
         }
 
         return properties
+    }
+
+    private fun getProperty(key: String): String? {
+        val property = properties.getProperty(key)
+        if (property != null) {
+            return property
+        }
+
+        // Read value from environment variables
+        val envVarsKey = "TUTORBOT_" + key.replace('.', '_').toUpperCase(Locale.US)
+        return System.getenv(envVarsKey)
     }
 }
