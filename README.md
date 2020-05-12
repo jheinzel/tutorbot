@@ -35,6 +35,8 @@ plagiarism.language.java.version=java19
 
 For Tutorbot to detect this file, it should be located in the same directory as the `tutorbot.jar` and should be called `tutorbot.properties`. It is also possible to configure those parameters using environment variables:
 
+| Key | Description |
+| --- | --- |
 | `TUTORBOT_USERNAME` | Moodle username |
 | `TUTORBOT_LOCATION_SUBMISSIONS` | Download location for submissions |
 | `TUTORBOT_LOCATION_REVIEWS` | Download location for reviews |
