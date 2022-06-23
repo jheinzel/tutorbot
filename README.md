@@ -25,8 +25,8 @@ moodle.username=ha20210005
 moodle.url=https://elearning.fh-ooe.at/
 
 # Email address and username of person who sends feedback emails
-email.address=Johann.Heinzelreiter@fh-hagenberg.at
-email.username=p20058
+email.address=John.Doe@fh-hagenberg.at
+email.username=p99999
 
 # <students-id>@<email.students.suffix>
 email.students.suffix=students.fh-hagenberg.at
@@ -42,7 +42,8 @@ location.submissions.subdir = submissions
 location.reviews.subdir = reviews
 
 # Java language version used by JPlag for plagiarism detection (default is Java 1.9)
-plagiarism.language.java.version=c/c++```
+plagiarism.language.java.version=c/c++
+```
 
 For Tutorbot to detect this file, it should be located in the same directory as the `tutorbot.jar` and should be called `tutorbot.properties`. It is also possible to configure those parameters using environment variables:
 
