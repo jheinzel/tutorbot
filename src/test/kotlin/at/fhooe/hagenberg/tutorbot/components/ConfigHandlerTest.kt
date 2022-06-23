@@ -17,9 +17,13 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/all.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertEquals("config-username", configHandler.getUsername())
-        assertEquals("config-location-submissions", configHandler.getSubmissionsDownloadLocation())
-        assertEquals("config-location-reviews", configHandler.getReviewsDownloadLocation())
+        assertEquals("config-username", configHandler.getMoodleUsername())
+        assertEquals("config-email-address", configHandler.getEmailAddress())
+        assertEquals("config-email-username", configHandler.getEmailUsername())
+        assertEquals("config-basedir", configHandler.getBaseDir())
+        assertEquals("config-submissions", configHandler.getSubmissionsSubDir())
+        assertEquals("config-reviews", configHandler.getReviewsSubDir())
+        assertEquals("config-exercise", configHandler.getExerciseSubDir())
         assertEquals("config-plagiarism-language-java-version", configHandler.getJavaLanguageLevel())
     }
 
@@ -33,9 +37,9 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/empty.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertEquals("env-username", configHandler.getUsername())
-        assertEquals("env-location-submissions", configHandler.getSubmissionsDownloadLocation())
-        assertEquals("env-location-reviews", configHandler.getReviewsDownloadLocation())
+        assertEquals("env-username", configHandler.getMoodleUsername())
+//        assertEquals("env-location-submissions", configHandler.getSubmissionsDownloadLocation())
+//        assertEquals("env-location-reviews", configHandler.getReviewsDownloadLocation())
         assertEquals("env-plagiarism-language-java-version", configHandler.getJavaLanguageLevel())
     }
 
@@ -46,7 +50,7 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/all.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertEquals("config-username", configHandler.getUsername())
+        assertEquals("config-username", configHandler.getMoodleUsername())
     }
 
     @Test
@@ -54,9 +58,9 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/missing.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertEquals("config-username", configHandler.getUsername())
-        assertNull(configHandler.getSubmissionsDownloadLocation())
-        assertNull(configHandler.getReviewsDownloadLocation())
+        assertEquals("config-username", configHandler.getMoodleUsername())
+//        assertNull(configHandler.getSubmissionsDownloadLocation())
+//        assertNull(configHandler.getReviewsDownloadLocation())
         assertNull(configHandler.getJavaLanguageLevel())
     }
 
@@ -65,9 +69,9 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/corrupt.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertNull(configHandler.getUsername())
-        assertNull(configHandler.getSubmissionsDownloadLocation())
-        assertNull(configHandler.getReviewsDownloadLocation())
+        assertNull(configHandler.getMoodleUsername())
+//        assertNull(configHandler.getSubmissionsDownloadLocation())
+//        assertNull(configHandler.getReviewsDownloadLocation())
         assertNull(configHandler.getJavaLanguageLevel())
     }
 }

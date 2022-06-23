@@ -12,6 +12,7 @@ import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.File
 import java.net.URI
+import java.nio.file.Path
 import javax.inject.Inject
 
 @Command(
@@ -24,7 +25,7 @@ class SubmissionsCommand @Inject constructor(
     private val plagiarismChecker: PlagiarismChecker,
     private val batchProcessor: BatchProcessor,
     private val configHandler: ConfigHandler
-) : DownloadCommand() {
+) : DownloadCommand(configHandler) {
 
     override fun execute() {
         val targetDirectory = setupTargetDirectory()
@@ -61,8 +62,8 @@ class SubmissionsCommand @Inject constructor(
         }
     }
 
-    override fun getTargetDirectoryFromConfig(): String? {
-        return configHandler.getSubmissionsDownloadLocation()
+    override fun getCommandSubDir(): String? {
+        return configHandler.getSubmissionsSubDir() ?: promptTextInput("Enter submissions subdirectory:")
     }
 
     private fun getAllDownloadLinks(assignmentUrl: String): List<String> = try {

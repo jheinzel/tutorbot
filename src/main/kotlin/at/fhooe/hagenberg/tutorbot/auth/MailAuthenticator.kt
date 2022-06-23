@@ -9,8 +9,8 @@ class MailAuthenticator @Inject constructor(
 ) : Authenticator() {
 
     public override fun getPasswordAuthentication(): PasswordAuthentication {
-        val username = credentialStore.getUsername()
-        val password = credentialStore.getPassword()
+        val username = credentialStore.getEmailUsername()
+        val password = credentialStore.getEmailPassword()
         return PasswordAuthentication(username, password)
     }
 }

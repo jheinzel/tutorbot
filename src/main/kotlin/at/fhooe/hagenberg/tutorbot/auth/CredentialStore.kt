@@ -8,19 +8,38 @@ import javax.inject.Singleton
 
 @Singleton
 class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
-    private var username: String? = null
-    private var password: String? = null
+    private var moodleUsername: String? = null
+    private var moodlePassword: String? = null
+    private var emailAddress: String? = null
+    private var emailUsername: String? = null
+    private var emailPassword: String? = null
 
     // Read initial values from the config
     init {
-        username = configHandler.getUsername()
+        moodleUsername = configHandler.getMoodleUsername()
+        emailAddress = configHandler.getEmailAddress()
+        emailUsername = configHandler.getEmailUsername()
     }
 
-    fun getUsername(): String {
-        return username ?: promptTextInput("Enter Moodle username:").also { username = it }
+    fun getMoodleUsername(): String {
+        return moodleUsername ?: promptTextInput("Enter moodle username:").also { moodleUsername = it }
     }
 
-    fun getPassword(): String {
-        return password ?: promptPasswordInput("Enter Moodle password:").also { password = it }
+    fun getEmailAddress(): String {
+        return emailAddress ?: promptTextInput("Enter email address:").also { emailAddress = it }
+    }
+
+    fun getEmailUsername(): String {
+        return emailUsername ?: promptTextInput("Enter email username:").also { emailUsername = it }
+    }
+
+    fun getMoodlePassword(): String {
+        // return moodlePassword ?: promptTextInput("Enter moodle password ($moodleUsername):").also { moodlePassword = it }
+        return moodlePassword ?: promptPasswordInput("Enter moodle password ($moodleUsername):").also { moodlePassword = it }
+    }
+
+    fun getEmailPassword(): String {
+        // return emailPassword ?: promptTextInput("Enter email password:").also { emailPassword = it }
+        return emailPassword ?: promptPasswordInput("Enter email password:").also { emailPassword = it }
     }
 }

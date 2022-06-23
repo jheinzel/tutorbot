@@ -24,9 +24,4 @@ object NetworkModule {
             .cookieJar(cookieJar)
             .build()
     }
-
-    @Provides
-    fun provideUrlProvider() = object : UrlProvider {
-        override fun baseUrl() = "https://hagenberg.elearning.fh-ooe.at/"
-    }
 }

@@ -13,15 +13,19 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.nio.file.Path
 
 class MailCommandTest : CommandLineTest() {
     private val mailClient = mockk<MailClient>()
     private val credentialStore = mockk<CredentialStore> {
-        every { getUsername() } returns "S0"
-        every { getPassword() } returns "Password"
+        every { getMoodleUsername() } returns "S0"
+        every { getEmailPassword() } returns "Password"
     }
     private val configHandler = mockk<ConfigHandler> {
-        every { getReviewsDownloadLocation() } returns null
+        every { getReviewsDirectoryFromConfig() } returns null
+    }
+    private fun getReviewsDirectoryFromConfig(): String? {
+        return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir()).toString();
     }
     private val batchProcessor = BatchProcessor()
 
@@ -63,7 +67,7 @@ class MailCommandTest : CommandLineTest() {
 
     @Test
     fun `Reviews directory is read from config`() {
-        every { configHandler.getReviewsDownloadLocation() } returns fileSystem.directory.absolutePath
+        every { getReviewsDirectoryFromConfig() } returns fileSystem.directory.absolutePath
         systemIn.provideLines("Subject", "Body", "Yes")
 
         mailCommand.execute()

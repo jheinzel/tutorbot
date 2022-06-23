@@ -1,27 +1,32 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
 import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import java.io.File
+import java.nio.file.Path
 
-abstract class DownloadCommand : BaseCommand() {
+abstract class DownloadCommand(
+    private val configHandler: ConfigHandler
+) : BaseCommand() {
 
-    protected abstract fun getTargetDirectoryFromConfig(): String?
+    protected abstract fun getCommandSubDir(): String?
 
     protected fun setupTargetDirectory(): File {
-        val locationPrompt = "Enter download location (leave empty for current directory):"
-        val targetPath = getTargetDirectoryFromConfig() ?: promptTextInput(locationPrompt)
-        val targetDirectory = File(targetPath)
+        val baseDir        = configHandler.getBaseDir()        ?: promptTextInput("Enter base directory:")
+        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
+        val commandSubDir  = getCommandSubDir()
+        val targetDirectory = Path.of(baseDir, exerciseSubDir, commandSubDir).toFile();
 
         // Make sure the target path points to a directory
         if (targetDirectory.isFile) {
-            exitWithError("Download location $targetPath points to a file.")
+            exitWithError("Download location ${targetDirectory.toString()} points to a file.")
         }
 
         // Make sure the directory is empty
         if (targetDirectory.exists()) {
-            if (promptBooleanInput("Download location $targetPath is not empty, should its contents be deleted?")) {
+            if (promptBooleanInput("Download location ${targetDirectory.toString()} is not empty, should its contents be deleted?")) {
                 targetDirectory.deleteRecursively()
             } else {
                 exitWithError("Cannot download into non-empty directory")

@@ -10,9 +10,18 @@ import javax.inject.Singleton
 class ConfigHandler @Inject constructor(@Named("config") config: File) {
     private val properties by lazy { parseProperties(config) }
 
-    fun getUsername(): String? = getProperty("username")
-    fun getSubmissionsDownloadLocation(): String? = getProperty("location.submissions")
-    fun getReviewsDownloadLocation(): String? = getProperty("location.reviews")
+    fun getMoodleUsername(): String? = getProperty("moodle.username")
+    fun getMoodleUrl(): String? = getProperty("moodle.url") ?: "https://elearning.fh-ooe.at/"
+
+    fun getEmailAddress(): String? = getProperty("email.address")
+    fun getEmailUsername(): String? = getProperty("email.username")
+    fun getStudentsEmailSuffix(): String = getProperty("email.students.suffix") ?: "students.fh-hagenberg.at"
+
+    fun getBaseDir(): String? = getProperty("location.basedir")
+    fun getSubmissionsSubDir(): String? = getProperty("location.submissions.subdir")
+    fun getReviewsSubDir(): String? = getProperty("location.reviews.subdir")
+    fun getExerciseSubDir(): String? = getProperty("location.exercise.subdir")
+
     fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
 
     private fun parseProperties(config: File): Properties {

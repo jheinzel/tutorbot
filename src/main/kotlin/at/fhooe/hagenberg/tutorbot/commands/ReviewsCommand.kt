@@ -8,6 +8,7 @@ import at.fhooe.hagenberg.tutorbot.util.href
 import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.File
+import java.nio.file.Path
 import javax.inject.Inject
 
 @Command(
@@ -18,7 +19,7 @@ class ReviewsCommand @Inject constructor(
     private val moodleClient: MoodleClient,
     private val batchProcessor: BatchProcessor,
     private val configHandler: ConfigHandler
-) : DownloadCommand() {
+) : DownloadCommand(configHandler) {
 
     override fun execute() {
         val targetDirectory = setupTargetDirectory()
@@ -56,8 +57,8 @@ class ReviewsCommand @Inject constructor(
         }
     }
 
-    override fun getTargetDirectoryFromConfig(): String? {
-        return configHandler.getReviewsDownloadLocation()
+    override fun getCommandSubDir(): String? {
+        return configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
     }
 
     private fun getAllDetailLinks(assignmentUrl: String): List<String> = try {

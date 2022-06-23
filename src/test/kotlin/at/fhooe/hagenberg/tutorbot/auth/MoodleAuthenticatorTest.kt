@@ -1,5 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.auth
 
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
 import at.fhooe.hagenberg.tutorbot.testutil.rules.MockServerRule
 import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
@@ -15,14 +16,15 @@ import org.junit.Test
 class MoodleAuthenticatorTest : CommandLineTest() {
     private val http = OkHttpClient()
     private val credentialStore = mockk<CredentialStore> {
-        every { getUsername() } returns "moodle-username"
-        every { getPassword() } returns "moodle-password"
+        every { getMoodleUsername() } returns "moodle-username"
+        every { getEmailPassword() } returns "moodle-password"
     }
+    private val configHandler = mockk<ConfigHandler>()
 
     @get:Rule
     val mockServer = MockServerRule()
 
-    private val moodleAuthenticator = MoodleAuthenticator(http, credentialStore, mockServer)
+    private val moodleAuthenticator = MoodleAuthenticator(http, credentialStore, configHandler)
 
     @Test
     fun `Login is performed if not yet authenticated`() {

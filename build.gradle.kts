@@ -31,7 +31,7 @@ dependencies {
     // Local JARs (JPlag)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
-    // E-Mails
+    // eails
     implementation("javax.mail:javax.mail-api:1.6.2")
     implementation("com.sun.mail:javax.mail:1.6.2")
 

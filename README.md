@@ -20,18 +20,29 @@ Tutorbot comes with a range of different features, it can support you by:
 Tutorbot requires different user inputs, some of them are likely repetitive. To avoid repeating them every time, these inputs can be stored in a configuration file. Currently the configuration file supports the following values:
 
 ```properties
-# Moodle username
-username=Sxxxxxxxxxx
+# Moodle username and base url
+moodle.username=ha20210005
+moodle.url=https://elearning.fh-ooe.at/
 
-# Download location for submissions
-location.submissions=/foo/bar/submissions
+# Email address and username of person who sends feedback emails
+email.address=Johann.Heinzelreiter@fh-hagenberg.at
+email.username=p20058
 
-# Download location for reviews
-location.reviews=/foo/bar/reviews
+# <students-id>@<email.students.suffix>
+email.students.suffix=students.fh-hagenberg.at
+
+# Base directory where downloaded files will be stored
+location.basedir = c:/Temp/SWO3/tutorbot/UeTest
+
+# Subdirectory for current exercise
+# location.exercise.subdir = ue01
+
+# Subdirectory where submissions and reviews will be stored
+location.submissions.subdir = submissions
+location.reviews.subdir = reviews
 
 # Java language version used by JPlag for plagiarism detection (default is Java 1.9)
-plagiarism.language.java.version=java19
-```
+plagiarism.language.java.version=c/c++```
 
 For Tutorbot to detect this file, it should be located in the same directory as the `tutorbot.jar` and should be called `tutorbot.properties`. It is also possible to configure those parameters using environment variables:
 

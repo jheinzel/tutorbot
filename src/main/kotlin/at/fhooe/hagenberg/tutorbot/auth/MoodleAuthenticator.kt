@@ -1,5 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.auth
 
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.network.UrlProvider
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.value
@@ -16,7 +17,7 @@ import javax.inject.Singleton
 class MoodleAuthenticator @Inject constructor(
     private val http: OkHttpClient,
     private val credentialStore: CredentialStore,
-    private val urlProvider: UrlProvider
+    private val configHandler: ConfigHandler
 ) {
     private var authenticated = false
 
@@ -27,13 +28,13 @@ class MoodleAuthenticator @Inject constructor(
 
         // Reconstruct the Moodle login form
         val formBody = FormBody.Builder()
-            .add("username", credentialStore.getUsername())
-            .add("password", credentialStore.getPassword())
+            .add("username", credentialStore.getMoodleUsername())
+            .add("password", credentialStore.getMoodlePassword())
             .add("logintoken", getLoginToken()) // We need a valid login token for the request to be accepted
             .build()
 
         // Perform the login, the session authentication cookie is automatically stored
-        val loginRequest = Request.Builder().url(urlProvider.baseUrl() + MOODLE_LOGIN_URL).post(formBody).build()
+        val loginRequest = Request.Builder().url(configHandler.getMoodleUrl() + MOODLE_LOGIN_URL).post(formBody).build()
         val loginResponse = http.newCall(loginRequest).execute()
 
         // Make sure the authentication was successful
@@ -50,7 +51,7 @@ class MoodleAuthenticator @Inject constructor(
     }
 
     private fun getLoginToken(): String {
-        val tokenRequest = Request.Builder().url(urlProvider.baseUrl() + MOODLE_LOGIN_URL).build()
+        val tokenRequest = Request.Builder().url(configHandler.getMoodleUrl() + MOODLE_LOGIN_URL).build()
         val tokenResponse = http.newCall(tokenRequest).execute()
         val tokenElement = parseLoginTokenElement(tokenResponse)
         return tokenElement?.value() ?: exitWithError("Could not find login token, maybe Moodle changed its format")

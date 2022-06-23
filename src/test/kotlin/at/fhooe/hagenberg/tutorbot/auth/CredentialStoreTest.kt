@@ -15,7 +15,7 @@ import java.io.Console
 class CredentialStoreTest : CommandLineTest() {
     private val console = mockk<Console>()
     private val configHandler = mockk<ConfigHandler> {
-        every { getUsername() } returns null
+        every { getMoodleUsername() } returns null
     }
 
     private val credentialStore = CredentialStore(configHandler)
@@ -33,16 +33,16 @@ class CredentialStoreTest : CommandLineTest() {
 
     @Test
     fun `Reads initial username from config`() {
-        every { configHandler.getUsername() } returns "ConfigUsername"
+        every { configHandler.getMoodleUsername() } returns "ConfigUsername"
         val credentialStore = CredentialStore(configHandler)
-        assertEquals("ConfigUsername", credentialStore.getUsername())
+        assertEquals("ConfigUsername", credentialStore.getMoodleUsername())
     }
 
     @Test
     fun `Retrieves username from cache or prompt`() {
         systemIn.provideLines("EnteredUsername")
         repeat(3) { // Subsequent queries should be cached
-            assertEquals("EnteredUsername", credentialStore.getUsername())
+            assertEquals("EnteredUsername", credentialStore.getMoodleUsername())
         }
     }
 
@@ -50,7 +50,7 @@ class CredentialStoreTest : CommandLineTest() {
     fun `Retrieves password from cache or prompt`() {
         every { console.readPassword() } returns "EnteredPassword".toCharArray()
         repeat(3) { // Subsequent queries should be cached
-            assertEquals("EnteredPassword", credentialStore.getPassword())
+            assertEquals("EnteredPassword", credentialStore.getEmailPassword())
         }
     }
 }

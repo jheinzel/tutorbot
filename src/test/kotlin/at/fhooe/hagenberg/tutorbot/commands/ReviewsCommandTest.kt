@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.nio.file.Path
 
 class ReviewsCommandTest : CommandLineTest() {
     private val moodleClient = mockk<MoodleClient> {
@@ -27,7 +28,10 @@ class ReviewsCommandTest : CommandLineTest() {
     }
     private val batchProcessor = BatchProcessor()
     private val configHandler = mockk<ConfigHandler> {
-        every { getReviewsDownloadLocation() } returns null
+        every { getReviewsDirectoryFromConfig() } returns null
+    }
+    private fun getReviewsDirectoryFromConfig(): String? {
+        return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir()).toString();
     }
 
     private val reviewsCommand = ReviewsCommand(moodleClient, batchProcessor, configHandler)
@@ -54,7 +58,7 @@ class ReviewsCommandTest : CommandLineTest() {
 
     @Test
     fun `Reviews directory is read from config`() {
-        every { configHandler.getReviewsDownloadLocation() } returns fileSystem.directory.absolutePath
+        every { getReviewsDirectoryFromConfig() } returns fileSystem.directory.absolutePath
         systemIn.provideLines("Yes", "www.assignment.com")
 
         reviewsCommand.execute()
