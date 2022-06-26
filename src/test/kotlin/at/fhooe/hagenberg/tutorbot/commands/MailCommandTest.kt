@@ -1,7 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.auth.CredentialStore
-import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.network.MailClient
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
@@ -25,11 +24,10 @@ class MailCommandTest : CommandLineTest() {
         every { getReviewsDirectoryFromConfig() } returns null
     }
     private fun getReviewsDirectoryFromConfig(): String? {
-        return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir()).toString();
+        return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir()).toString()
     }
-    private val batchProcessor = BatchProcessor()
 
-    private val mailCommand = MailCommand(mailClient, credentialStore, configHandler, batchProcessor)
+    private val mailCommand = MailCommand(mailClient, credentialStore, configHandler)
 
     @get:Rule
     val fileSystem = FileSystemRule()
