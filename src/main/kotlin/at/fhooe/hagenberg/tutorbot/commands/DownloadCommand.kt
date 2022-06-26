@@ -16,8 +16,9 @@ abstract class DownloadCommand(
     protected fun setupTargetDirectory(): File {
         val baseDir        = configHandler.getBaseDir()        ?: promptTextInput("Enter base directory:")
         val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
+        configHandler.setExerciseSubDir(exerciseSubDir) // prevents asking for exercise directory when downloading submissions in review command
         val commandSubDir  = getCommandSubDir()
-        val targetDirectory = Path.of(baseDir, exerciseSubDir, commandSubDir).toFile();
+        val targetDirectory = Path.of(baseDir, exerciseSubDir, commandSubDir).toFile()
 
         // Make sure the target path points to a directory
         if (targetDirectory.isFile) {
