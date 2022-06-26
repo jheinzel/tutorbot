@@ -25,7 +25,7 @@ fun promptBooleanInput(prompt: String): Boolean {
 }
 
 fun exitWithError(message: String): Nothing {
-    System.err.println("ERROR: $message")
+    printlnRed("ERROR: $message")
     throw ProgramExitError()
 }
 
