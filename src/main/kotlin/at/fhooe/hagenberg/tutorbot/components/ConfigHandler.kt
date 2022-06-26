@@ -10,19 +10,28 @@ import javax.inject.Singleton
 class ConfigHandler @Inject constructor(@Named("config") config: File) {
     private val properties by lazy { parseProperties(config) }
 
+    private var exerciseDirectory: String? = null
+
     fun getMoodleUsername(): String? = getProperty("moodle.username")
-    fun getMoodleUrl(): String? = getProperty("moodle.url") ?: "https://elearning.fh-ooe.at/"
+    fun getMoodlePassword(): String? = getProperty("moodle.password")
+    fun getMoodleUrl(): String = getProperty("moodle.url") ?: "https://elearning.fh-ooe.at/"
 
     fun getEmailAddress(): String? = getProperty("email.address")
     fun getEmailUsername(): String? = getProperty("email.username")
-    fun getStudentsEmailSuffix(): String = getProperty("email.students.suffix") ?: "students.fh-hagenberg.at"
+    fun getStudentsEmailSuffix(): String = getProperty("email.students.suffix") ?: "fhooe.at"
 
     fun getBaseDir(): String? = getProperty("location.basedir")
     fun getSubmissionsSubDir(): String? = getProperty("location.submissions.subdir")
     fun getReviewsSubDir(): String? = getProperty("location.reviews.subdir")
-    fun getExerciseSubDir(): String? = getProperty("location.exercise.subdir")
+    fun getExerciseSubDir(): String? = exerciseDirectory ?: getProperty("location.exercise.subdir")
+    fun setExerciseSubDir(dir: String?) {
+        exerciseDirectory = dir
+    }
 
     fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
+
+    fun getEmailSubjectTemplate(): String? = getProperty("email.template.subject")
+    fun getEmailBodyTemplate(): String? = getProperty("email.template.body")
 
     private fun parseProperties(config: File): Properties {
         val properties = Properties()
