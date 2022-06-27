@@ -1,17 +1,14 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.auth.CredentialStore
-import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.network.MailClient
-import at.fhooe.hagenberg.tutorbot.util.exitWithError
-import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
-import at.fhooe.hagenberg.tutorbot.util.promptMultilineTextInput
-import at.fhooe.hagenberg.tutorbot.util.promptTextInput
+import at.fhooe.hagenberg.tutorbot.util.*
 import picocli.CommandLine.Command
 import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
+import javax.mail.AuthenticationFailedException
 
 @Command(
     name = "mail",
@@ -20,18 +17,11 @@ import javax.inject.Inject
 class MailCommand @Inject constructor(
     private val mailClient: MailClient,
     private val credentialStore: CredentialStore,
-    private val configHandler: ConfigHandler,
-    private val batchProcessor: BatchProcessor
+    private val configHandler: ConfigHandler
 ) : BaseCommand() {
 
     override fun execute() {
         val reviewsDirectory = getReviewsDirectory()
-
-        // Read sender information from the user
-        val subject = promptTextInput("Enter email subject:")
-        val body = promptMultilineTextInput("Enter email body:")
-        val from = credentialStore.getEmailAddress()
-        credentialStore.getEmailPassword() // Make sure the password is entered by the user
 
         // Query all PDF files in the directory
         val files = reviewsDirectory.listFiles { file -> file.extension.toLowerCase() == "pdf" } ?: emptyArray()
@@ -40,27 +30,76 @@ class MailCommand @Inject constructor(
             return // Nothing to do if there are no files
         }
 
+        // Read sender information from the user
+
+        val subject = configHandler.getEmailSubjectTemplate()?.promptTemplateArguments("Subject")
+            ?: promptTextInput("Enter email subject:")
+        val body = configHandler.getEmailBodyTemplate()?.promptTemplateArguments("Body")
+            ?: promptMultilineTextInput("Enter email body:")
+        val from = credentialStore.getEmailAddress()
+
+        // Make sure the password is entered by the user and the password works
+        while (true) {
+            try {
+                credentialStore.setEmailPassword(promptPasswordInput("Enter email password:"))
+                print("Trying to send Testmail to: $from ... ")
+                mailClient.sendMail(MailClient.Mail(from, listOf(from), subject, body, files[0]))
+                printlnGreen("success!")
+                break
+            } catch (authEx: AuthenticationFailedException) {
+                printlnRed("Password is not correct, try again")
+            } catch (exception: Exception){
+                exitWithError("${exception.message}")
+            }
+        }
+
         // Construct all the mail messages
         val mails = files.map { pdf ->
-            val (submitter, reviewer) = pdf.nameWithoutExtension.split("-")
+            val (submitter, reviewer) = pdf.nameWithoutExtension.split("_")[0].split("-")
             MailClient.Mail(from, listOf(getStudentEmail(submitter), getStudentEmail(reviewer)), subject, body, pdf)
         }
 
         // Confirm before sending messages -> just to be safe
         if (promptBooleanInput("Do you want to send ${mails.size} emails?")) {
-            batchProcessor.process(mails, "Sending emails", "Sent all emails") { mail ->
-                mailClient.sendMail(mail)
+            println("Sending Emails to:")
+            mails.mapIndexedNotNull { index, mail ->
+                try {
+                    print("\t(${index + 1}/${mails.size}) ${mail.to} ... ")
+                    mailClient.sendMail(mail)
+                    printlnGreen("success")
+                } catch (exception: Exception) {
+                    printlnRed("failed (${exception::class.java.typeName}; ${exception.message})")
+                }
+            }
+        }
+    }
+
+    private fun String.promptTemplateArguments(name: String): String {
+        println("$name template found:")
+        printlnGreen(this)
+
+        while (true) {
+            val args = promptTextInput("Supply template arguments (separate args with ;):")
+                .split(";").map { arg -> arg.trim() }.toTypedArray()
+            try {
+                val formatted = this.format(*args)
+                println("Formatted:")
+                printlnCyan(formatted)
+                if (promptBooleanInput("$name formatted correctly?"))
+                    return formatted
+            } catch (exception: Exception) {
+                printlnRed("Could not format string, try again (${exception.message})")
             }
         }
     }
 
 
     private fun getReviewsDirectory(): File {
-        val baseDir        = configHandler.getBaseDir()        ?: promptTextInput("Enter base directory:")
+        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
         val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsSubDir  = configHandler.getReviewsSubDir()  ?: promptTextInput("Enter reviews subdirectory:")
+        val reviewsSubDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
 
-        var reviewsDirectory = File(Path.of(baseDir, exerciseSubDir, reviewsSubDir).toString());
+        val reviewsDirectory = File(Path.of(baseDir, exerciseSubDir, reviewsSubDir).toString())
 
         // Make sure the target path points to a directory
         if (!reviewsDirectory.isDirectory) {
@@ -70,7 +109,9 @@ class MailCommand @Inject constructor(
         return reviewsDirectory
     }
 
+
+
     private fun getStudentEmail(username: String): String {
-         return "$username@${configHandler.getStudentsEmailSuffix()}"
+        return "$username@${configHandler.getStudentsEmailSuffix()}"
     }
 }

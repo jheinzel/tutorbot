@@ -1,8 +1,8 @@
 package at.fhooe.hagenberg.tutorbot.auth
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.network.UrlProvider
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
+import at.fhooe.hagenberg.tutorbot.util.printlnGreen
 import at.fhooe.hagenberg.tutorbot.util.value
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
@@ -48,6 +48,7 @@ class MoodleAuthenticator @Inject constructor(
         }
 
         authenticated = true // Only authenticate once
+        printlnGreen("Authentication successful")
     }
 
     private fun getLoginToken(): String {

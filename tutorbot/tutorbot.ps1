@@ -1,0 +1,1 @@
+java -jar ./tutorbot.jar $args

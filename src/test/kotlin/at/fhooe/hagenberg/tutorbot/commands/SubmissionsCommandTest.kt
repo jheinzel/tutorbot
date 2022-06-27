@@ -1,5 +1,7 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
+import at.fhooe.hagenberg.tutorbot.auth.CredentialStore
+import at.fhooe.hagenberg.tutorbot.auth.MoodleAuthenticator
 import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.PlagiarismChecker
@@ -12,6 +14,7 @@ import at.fhooe.hagenberg.tutorbot.testutil.getResource
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
 import io.mockk.*
+import okhttp3.OkHttpClient
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -34,7 +37,14 @@ class SubmissionsCommandTest : CommandLineTest() {
         return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getSubmissionsSubDir()).toString();
     }
 
-    private val submissionsCommand = SubmissionsCommand(moodleClient, unzipper, plagiarismChecker, batchProcessor, configHandler)
+    private val http = OkHttpClient()
+    private val credentialStore = mockk<CredentialStore> {
+        every { getMoodleUsername() } returns "moodle-username"
+        every { getEmailPassword() } returns "moodle-password"
+    }
+    private val moodleAuthenticator = MoodleAuthenticator(http, credentialStore, configHandler)
+
+    private val submissionsCommand = SubmissionsCommand(moodleClient, unzipper, plagiarismChecker, batchProcessor, configHandler, moodleAuthenticator)
 
     @get:Rule
     val fileSystem = FileSystemRule()
