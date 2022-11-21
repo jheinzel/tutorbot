@@ -11,6 +11,7 @@ import io.mockk.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.io.Console
 import java.io.File
 import java.nio.file.Path
 import javax.mail.AuthenticationFailedException
@@ -81,7 +82,11 @@ class MailCommandTest : CommandLineTest() {
 
     @Test
     fun `Failed authorization allows retry`() {
+        val console = mockk<Console>()
         systemIn.provideLines("Subject", "Body", "Y")
+        mockkStatic(System::class)
+        every { System.console() } returns console
+        every { console.readPassword() } returns "password".toCharArray()
         every {mailClient.sendMail(any()) } throws AuthenticationFailedException() andThen Unit
 
         mailCommand.execute()
