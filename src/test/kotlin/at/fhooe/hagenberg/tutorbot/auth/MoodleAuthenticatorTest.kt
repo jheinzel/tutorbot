@@ -10,27 +10,35 @@ import io.mockk.every
 import io.mockk.mockk
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class MoodleAuthenticatorTest : CommandLineTest() {
-    private val http = OkHttpClient()
-    private val credentialStore = mockk<CredentialStore> {
-        every { getMoodleUsername() } returns "moodle-username"
-        every { getEmailPassword() } returns "moodle-password"
-    }
-    private val configHandler = mockk<ConfigHandler>()
-
     @get:Rule
     val mockServer = MockServerRule()
 
+    private val http = OkHttpClient()
+
+    private val credentialStore = mockk<CredentialStore> {
+        every { getMoodleUsername() } returns "moodle-username"
+        every { getMoodlePassword() } returns "moodle-password"
+    }
+
+    private val configHandler = mockk<ConfigHandler>()
+
     private val moodleAuthenticator = MoodleAuthenticator(http, credentialStore, configHandler)
+
+    @Before
+    fun setup () {
+        mockServer.start()
+        every { configHandler.getMoodleUrl() } returns mockServer.baseUrl()
+    }
 
     @Test
     fun `Login is performed if not yet authenticated`() {
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResource("websites/Blank.html")
-        mockServer.start()
 
         moodleAuthenticator.authenticate()
 
@@ -50,7 +58,7 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     fun `No action is taken if already authenticated`() {
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResource("websites/Blank.html")
-        mockServer.start()
+
         moodleAuthenticator.authenticate() // Perform initial login
 
         repeat(5) { // Subsequent login calls should do nothing
@@ -61,7 +69,6 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     @Test
     fun `Program exits if login token request fails`() {
         mockServer.enqueueResponseCode(500)
-        mockServer.start()
 
         assertThrows<ProgramExitError> { moodleAuthenticator.authenticate() }
     }
@@ -70,7 +77,6 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     fun `Program exits if authentication request fails`() {
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResponseCode(500)
-        mockServer.start()
 
         assertThrows<ProgramExitError> { moodleAuthenticator.authenticate() }
     }
@@ -79,7 +85,6 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     fun `Program exits when wrong credentials are used`() {
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResource("websites/LoggedOut.html")
-        mockServer.start()
 
         assertThrows<ProgramExitError> { moodleAuthenticator.authenticate() }
     }
@@ -87,7 +92,6 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     @Test
     fun `Program exits if the page format changed`() {
         mockServer.enqueueResource("websites/Blank.html")
-        mockServer.start()
 
         assertThrows<ProgramExitError> { moodleAuthenticator.authenticate() }
     }

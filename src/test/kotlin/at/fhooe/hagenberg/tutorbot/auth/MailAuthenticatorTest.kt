@@ -12,7 +12,7 @@ class MailAuthenticatorTest {
     
     @Test
     fun `Password authentication uses correct credentials`() {
-        every { credentialStore.getMoodleUsername() } returns "username"
+        every { credentialStore.getEmailUsername() } returns "username"
         every { credentialStore.getEmailPassword() } returns "password"
 
         val auth = mailAuthenticator.passwordAuthentication
