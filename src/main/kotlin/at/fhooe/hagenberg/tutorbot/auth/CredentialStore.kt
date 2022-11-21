@@ -20,6 +20,7 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
         moodlePassword = configHandler.getMoodlePassword()
         emailAddress = configHandler.getEmailAddress()
         emailUsername = configHandler.getEmailUsername()
+        emailPassword = configHandler.getEmailPassword()
     }
 
     fun getMoodleUsername(): String {

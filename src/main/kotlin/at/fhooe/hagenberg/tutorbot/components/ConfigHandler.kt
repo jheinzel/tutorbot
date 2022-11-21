@@ -18,7 +18,10 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
 
     fun getEmailAddress(): String? = getProperty("email.address")
     fun getEmailUsername(): String? = getProperty("email.username")
+    fun getEmailPassword(): String? = getProperty("email.password")
     fun getStudentsEmailSuffix(): String = getProperty("email.students.suffix") ?: "fhooe.at"
+    fun getEmailSubjectTemplate(): String? = getProperty("email.template.subject")
+    fun getEmailBodyTemplate(): String? = getProperty("email.template.body")
 
     fun getBaseDir(): String? = getProperty("location.basedir")
     fun getSubmissionsSubDir(): String? = getProperty("location.submissions.subdir")
@@ -29,9 +32,6 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
     }
 
     fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
-
-    fun getEmailSubjectTemplate(): String? = getProperty("email.template.subject")
-    fun getEmailBodyTemplate(): String? = getProperty("email.template.body")
 
     private fun parseProperties(config: File): Properties {
         val properties = Properties()
