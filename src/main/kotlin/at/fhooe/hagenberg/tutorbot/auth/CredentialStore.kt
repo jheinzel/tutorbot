@@ -43,8 +43,4 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
         // return emailPassword ?: promptTextInput("Enter email password:").also { emailPassword = it }
         return emailPassword ?: promptPasswordInput("Enter email password:").also { emailPassword = it }
     }
-
-    fun setEmailPassword(pw: String){
-        emailPassword = pw
-    }
 }
