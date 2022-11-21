@@ -26,6 +26,8 @@ class MailCommandTest : CommandLineTest() {
 
     private val configHandler = mockk<ConfigHandler>() {
         every { getStudentsEmailSuffix() } returns "example.org"
+        every { getExerciseSubDir() } returns "ue01"
+        every { getReviewsSubDir() } returns "reviews"
     }
 
     private val mailCommand = MailCommand(mailClient, credentialStore, configHandler)
@@ -39,9 +41,7 @@ class MailCommandTest : CommandLineTest() {
     @Before
     fun setup() {
         // Setup example files at the temporary fileSystem location
-        every { configHandler.getBaseDir() } returns fileSystem.directory.toString()
-        every { configHandler.getExerciseSubDir() } returns "ue01"
-        every { configHandler.getReviewsSubDir() } returns "reviews"
+        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath.toString()
         // No template in default setup
         every { configHandler.getEmailSubjectTemplate() } returns null
         every { configHandler.getEmailBodyTemplate() } returns null
@@ -49,8 +49,8 @@ class MailCommandTest : CommandLineTest() {
         val reviewLoc =
             Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
                 .toString()
-        file1 = File(ClassLoader.getSystemResource("pdfs/S1-S2.pdf").toURI()).copyTo(File(reviewLoc, "S1-S2.pdf"))
-        file2 = File(ClassLoader.getSystemResource("pdfs/S3-S4.pdf").toURI()).copyTo(File(reviewLoc, "S3-S4.pdf"))
+        file1 = File(ClassLoader.getSystemResource("pdfs/S1-S2_S1-S2.pdf").toURI()).copyTo(File(reviewLoc, "S1-S2_S1-S2.pdf"))
+        file2 = File(ClassLoader.getSystemResource("pdfs/S3-S4_S3-S4.pdf").toURI()).copyTo(File(reviewLoc, "S3-S4_S3-S4.pdf"))
     }
 
     @Test
@@ -108,9 +108,8 @@ class MailCommandTest : CommandLineTest() {
 
     @Test
     fun `Program exits if the base directory is not valid`() {
-        every { configHandler.getBaseDir() } returns fileSystem.file.absolutePath andThen File(fileSystem.directory, "nonexistant").absolutePath
+        every { configHandler.getBaseDir() } returns File(fileSystem.directory, "nonexistant").absolutePath
 
-        assertThrows<ProgramExitError> { mailCommand.execute() }
         assertThrows<ProgramExitError> { mailCommand.execute() }
     }
 
