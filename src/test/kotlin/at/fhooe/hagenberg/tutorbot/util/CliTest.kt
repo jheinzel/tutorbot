@@ -71,7 +71,6 @@ class CliTest : CommandLineTest() {
     @Test
     fun `Exiting the program works correctly`() {
         assertThrows<ProgramExitError> { exitWithError("Error message") }
-        assertEquals("ERROR: Error message\n", systemErr.logWithNormalizedLineSeparator)
     }
 
     @Test
