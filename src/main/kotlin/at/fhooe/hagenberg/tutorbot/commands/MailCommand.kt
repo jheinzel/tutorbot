@@ -46,6 +46,7 @@ class MailCommand @Inject constructor(
                 break
             } catch (authEx: AuthenticationFailedException) {
                 printlnRed("Password is not correct, try again")
+                credentialStore.setEmailPassword(promptPasswordInput("Enter email password:"))
             } catch (exception: Exception){
                 exitWithError("${exception.message}")
             }
