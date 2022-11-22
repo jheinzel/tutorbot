@@ -31,7 +31,6 @@ class MailCommand @Inject constructor(
         }
 
         // Read sender information from the user
-
         val subject = configHandler.getEmailSubjectTemplate()?.promptTemplateArguments("Subject")
             ?: promptTextInput("Enter email subject:")
         val body = configHandler.getEmailBodyTemplate()?.promptTemplateArguments("Body")
@@ -41,13 +40,13 @@ class MailCommand @Inject constructor(
         // Make sure the password is entered by the user and the password works
         while (true) {
             try {
-                credentialStore.setEmailPassword(promptPasswordInput("Enter email password:"))
                 print("Trying to send Testmail to: $from ... ")
                 mailClient.sendMail(MailClient.Mail(from, listOf(from), subject, body, files[0]))
                 printlnGreen("success!")
                 break
             } catch (authEx: AuthenticationFailedException) {
                 printlnRed("Password is not correct, try again")
+                credentialStore.setEmailPassword(promptPasswordInput("Enter email password:"))
             } catch (exception: Exception){
                 exitWithError("${exception.message}")
             }
@@ -93,7 +92,6 @@ class MailCommand @Inject constructor(
         }
     }
 
-
     private fun getReviewsDirectory(): File {
         val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
         val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
@@ -108,8 +106,6 @@ class MailCommand @Inject constructor(
 
         return reviewsDirectory
     }
-
-
 
     private fun getStudentEmail(username: String): String {
         return "$username@${configHandler.getStudentsEmailSuffix()}"

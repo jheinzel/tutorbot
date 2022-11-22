@@ -1,6 +1,5 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
-import at.fhooe.hagenberg.tutorbot.auth.CredentialStore
 import at.fhooe.hagenberg.tutorbot.auth.MoodleAuthenticator
 import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
@@ -16,7 +15,6 @@ import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import okhttp3.OkHttpClient
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -25,39 +23,42 @@ import java.io.File
 import java.nio.file.Path
 
 class ReviewsCommandTest : CommandLineTest() {
+    private val testFileName = "S1-S2_S1-S2.pdf"
+    private val reviewLoc = "reviews"
+    private val exerciseLoc = "ue01"
+
     private val moodleClient = mockk<MoodleClient> {
         every { getHtmlDocument("www.assignment.com") } returns getHtmlResource("websites/Assignment.html")
         every { getHtmlDocument("www.assignment.com/details") } returns getHtmlResource("websites/Details.html")
         every { getHtmlDocument("www.assignment.com/S1") } returns getHtmlResource("websites/S1.html")
         every { getHtmlDocument("www.assignment.com/S2") } returns getHtmlResource("websites/S2.html")
     }
-    private val http = OkHttpClient()
-    private val credentialStore = mockk<CredentialStore> {
-        every { getMoodleUsername() } returns "moodle-username"
-        every { getEmailPassword() } returns "moodle-password"
-    }
-
-    private val batchProcessor = BatchProcessor()
     private val configHandler = mockk<ConfigHandler> {
-        every { getReviewsDirectoryFromConfig() } returns null
+        every { getExerciseSubDir() } returns exerciseLoc
+        every { getReviewsSubDir() } returns reviewLoc
     }
-    private fun getReviewsDirectoryFromConfig(): String? {
-        return Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir()).toString();
-    }
-
-    private val moodleAuthenticator = MoodleAuthenticator(http, credentialStore, configHandler)
+    private val batchProcessor = BatchProcessor()
+    private val moodleAuthenticator = mockk<MoodleAuthenticator>()
     private val unzipper = Unzipper()
     private val plagiarismChecker = mockk<PlagiarismChecker>()
-
-    private val submissionsCommand = SubmissionsCommand(moodleClient, unzipper, plagiarismChecker, batchProcessor, configHandler, moodleAuthenticator)
-
-    private val reviewsCommand = ReviewsCommand(moodleClient, batchProcessor, configHandler, moodleAuthenticator, submissionsCommand)
+    private val submissionsCommand = SubmissionsCommand(
+        moodleClient,
+        unzipper,
+        plagiarismChecker,
+        batchProcessor,
+        configHandler,
+        moodleAuthenticator
+    )
+    private val reviewsCommand =
+        ReviewsCommand(moodleClient, batchProcessor, configHandler, moodleAuthenticator, submissionsCommand)
 
     @get:Rule
     val fileSystem = FileSystemRule()
 
     @Before
     fun setup() {
+        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath.toString()
+
         val fileSlot = slot<File>() // Download files from resources
         every { moodleClient.downloadFile(any(), capture(fileSlot)) } answers {
             val file = getResource("pdfs/${fileSlot.captured.name}")
@@ -66,17 +67,19 @@ class ReviewsCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Reviews are downloaded correctly`() {
-        systemIn.provideLines(fileSystem.directory.absolutePath, "Yes", "www.assignment.com")
+    fun `Reviews are downloaded correctly with properties`() {
+        systemIn.provideLines("www.assignment.com", "N")
 
         reviewsCommand.execute()
         verifyReviews()
     }
 
     @Test
-    fun `Reviews directory is read from config`() {
-        every { getReviewsDirectoryFromConfig() } returns fileSystem.directory.absolutePath
-        systemIn.provideLines("Yes", "www.assignment.com")
+    fun `Reviews directory is read from console`() {
+        every { configHandler.getBaseDir() } returns null
+        every { configHandler.getExerciseSubDir() } returns null
+        every { configHandler.getReviewsSubDir() } returns null
+        systemIn.provideLines(fileSystem.directory.absolutePath, exerciseLoc, reviewLoc, "www.assignment.com", "N")
 
         reviewsCommand.execute()
         verifyReviews()
@@ -91,15 +94,26 @@ class ReviewsCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Program exits if the reviews directory is not valid`() {
-        systemIn.provideLines(fileSystem.file.absolutePath)
+    fun `Program exits if the input directory is not valid`() {
+        val exLoc =
+            Path.of(fileSystem.directory.absolutePath, exerciseLoc)
+                .toFile()
+        exLoc.mkdirs()
+        val reviewFile = Path.of(exLoc.toString(), reviewLoc).toFile()
+        reviewFile.createNewFile()
+        // Does not allow when directory == file
         assertThrows<ProgramExitError> { reviewsCommand.execute() }
-
-        systemIn.provideLines(fileSystem.directory.absolutePath, "No")
+        reviewFile.delete()
+        reviewFile.mkdirs()
+        // Does not allow when exists and override is N
+        systemIn.provideLines(fileSystem.directory.absolutePath, "N")
         assertThrows<ProgramExitError> { reviewsCommand.execute() }
     }
 
     private fun verifyReviews() {
-        assertTrue(File(fileSystem.directory, "S1-S2.pdf").exists())
+        val reviewLoc =
+            Path.of(fileSystem.directory.absolutePath, exerciseLoc, reviewLoc)
+                .toString()
+        assertTrue(File(reviewLoc, testFileName).exists())
     }
 }

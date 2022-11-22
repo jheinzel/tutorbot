@@ -20,20 +20,21 @@ Tutorbot comes with a range of different features, it can support you by:
 Tutorbot requires different user inputs, some of them are likely repetitive. To avoid repeating them every time, these inputs can be stored in a configuration file. Currently the configuration file supports the following values:
 
 ```properties
-# Moodle username and base url
+# Moodle username (only works for local accounts since mandatory 2FA)
 moodle.username=ha20210005
-# set the password for ease of use
+# Set the password for ease of use
 moodle.password=XXXXXX
 moodle.url=https://elearning.fh-ooe.at/
 
 # Email address and username of person who sends feedback emails
 email.address=sXXXXXXXXXX@fhooe.at
 email.username=sXXXXXXXXXX
+email.password=XXXXXX
 
 # <students-id>@<email.students.suffix> => for receivers of emails
 email.students.suffix=fhooe.at
 
-# Base directory where downloaded files will be stored
+# Base directory where exercise folders will be stored
 location.basedir = ../
 
 # Subdirectory for current exercise
@@ -45,10 +46,10 @@ location.basedir = ../
 location.submissions.subdir = submissions
 location.reviews.subdir = reviews
 
-# this current setup directory would be like this would look like this
+# This current setup directory would be like this would look like this
 # ./basedir/exercise.subdir/submissions
 # ./basedir/exercise.subdir/reviews
-# the exercise.subdir would be replaced by whatever target dir you but into the command when it asks you
+# The exercise.subdir would be replaced by whatever target dir you put into the command when it asks you
 
 # Java language version used by JPlag for plagiarism detection (default is Java 1.9)
 # remove / comment line below for java
@@ -61,12 +62,22 @@ email.template.body=Hallo,\n\nanbei euer Feedback zur Uebung %s.\nBei Fragen koe
 
 For Tutorbot to detect this file, it should be located in the same directory as the `tutorbot.jar` and should be called `tutorbot.properties`. It is also possible to configure those parameters using environment variables:
 
-| Environment variable | Description |
-| --- | --- |
-| `TUTORBOT_USERNAME` | Moodle username |
-| `TUTORBOT_LOCATION_SUBMISSIONS` | Download location for submissions |
-| `TUTORBOT_LOCATION_REVIEWS` | Download location for reviews |
-| `TUTORBOT_PLAGIARISM_LANGUAGE_JAVA_VERSION` | Java language version used by JPlag for plagiarism detection (default is Java 1.9) |
+| Environment variable                        | Description                                                                                            |
+|---------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `TUTORBOT_MOODLE_USERNAME`                  | Moodle username (only works for local accounts since mandatory 2FA)                                    |
+| `TUTORBOT_MOODLE_PASSWORD`                  | Moodle password                                                                                        |
+| `TUTORBOT_MOODLE_URL`                       | Moodle base url (default https://elearning.fh-ooe.at/)                                                 |
+| `TUTORBOT_EMAIL_ADDRESS`                    | E-Mail address the feedback will be sent from                                                          |
+| `TUTORBOT_EMAIL_USERNAME`                   | Username for the E-Mail service                                                                        |
+| `TUTORBOT_EMAIL_PASSWORD`                   | Password for the E-Mail service                                                                        |
+| `TUTORBOT_EMAIL_TEMPLATE_SUBJECT`           | Template string for the subject of E-Mails sent to students. %s is used as placeholder.                |
+| `TUTORBOT_EMAIL_TEMPLATE_BODY`              | Template string for the body of E-Mails sent to students. %s is used as placeholder.                   |
+| `TUTORBOT_EMAIL_STUDENTS_SUFFIX`            | Suffix of E-Mail addresses of students (default fhooe.at)                                              |
+| `TUTORBOT_LOCATION_BASEDIR`                 | Base-location where Tutorbot will create other folders                                                 |
+| `TUTORBOT_LOCATION_EXERCISE_SUBDIR`         | Subfolder of basedir for the exercise                                                                  |
+| `TUTORBOT_LOCATION_SUBMISSIONS_SUBDIR`      | Subfolder of exercise as download location for submissions                                             |
+| `TUTORBOT_LOCATION_REVIEWS_SUBDIR`          | Subfolder of exercise as download location for reviews                                                 |
+| `TUTORBOT_PLAGIARISM_LANGUAGE_JAVA_VERSION` | Java language version used by JPlag for plagiarism detection (default is Java 1.9). Also supports C/C++. |
 
 Values from the properties file will take precedence over values from environment variables if both are specified. 
 

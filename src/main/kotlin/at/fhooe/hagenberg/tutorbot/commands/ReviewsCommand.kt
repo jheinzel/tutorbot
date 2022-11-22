@@ -29,12 +29,16 @@ class ReviewsCommand @Inject constructor(
         val detailUrls = getAllDetailLinks(assignmentUrl)
 
         var submissionOptions: Triple<Boolean, Boolean, Boolean>? = null
-        if(promptBooleanInput("Also download submissions?")){
+        if (promptBooleanInput("Also download submissions?")) {
             submissionOptions = promptForSubmissionOptions()
         }
 
         // Follow the detail links and extract the real download URL as well as the file name
-        val reviews = batchProcessor.process(detailUrls,  "Gathering review download URLs", "Gathered review download URLs") { url ->
+        val reviews = batchProcessor.process(
+            detailUrls,
+            "Gathering review download URLs",
+            "Gathered review download URLs"
+        ) { url ->
             val detailPage = moodleClient.getHtmlDocument(url)
 
             // Extract the student number of the submitter
@@ -66,7 +70,7 @@ class ReviewsCommand @Inject constructor(
             moodleClient.downloadFile(link, file)
         }
 
-        if(submissionOptions != null){
+        if (submissionOptions != null) {
             submissionsCommand.execute(assignmentUrl, submissionOptions)
         }
     }

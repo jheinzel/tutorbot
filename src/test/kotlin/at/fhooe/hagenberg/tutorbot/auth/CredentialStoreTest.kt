@@ -16,12 +16,13 @@ class CredentialStoreTest : CommandLineTest() {
     private val console = mockk<Console>()
     private val configHandler = mockk<ConfigHandler> {
         every { getMoodleUsername() } returns null
+        every { getEmailPassword() } returns null
     }
 
     private val credentialStore = CredentialStore(configHandler)
 
     @Before
-    fun setup () {
+    fun setup() {
         mockkStatic(System::class)
         every { System.console() } returns console
     }
