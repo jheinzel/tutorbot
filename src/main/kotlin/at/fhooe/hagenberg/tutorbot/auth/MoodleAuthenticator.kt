@@ -3,13 +3,13 @@ package at.fhooe.hagenberg.tutorbot.auth
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.printlnGreen
+import at.fhooe.hagenberg.tutorbot.util.printlnRed
 import at.fhooe.hagenberg.tutorbot.util.value
-import okhttp3.FormBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.net.URI
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,6 +26,28 @@ class MoodleAuthenticator @Inject constructor(
             return // No need to authenticate twice
         }
 
+        val response = when (configHandler.getMoodleAuthMethod()) {
+            ConfigHandler.AuthMethod.COOKIE -> authenticateUsingCookie()
+            ConfigHandler.AuthMethod.USER_PASS -> authenticateUsingUserPass()
+        }
+
+        response.use {
+            // Make sure the authentication was successful
+            if (!response.isSuccessful) {
+                exitWithError("Could not authenticate, please check your internet connection.")
+            }
+
+            // If we got a login token again, we are not authenticated
+            if (parseLoginTokenElement(response) != null) {
+                exitWithError("Authentication failed, please check your credentials.")
+            }
+
+            authenticated = true // Only authenticate once
+            printlnGreen("Authentication successful")
+        }
+    }
+
+    private fun authenticateUsingUserPass(): Response {
         // Reconstruct the Moodle login form
         val formBody = FormBody.Builder()
             .add("username", credentialStore.getMoodleUsername())
@@ -35,20 +57,30 @@ class MoodleAuthenticator @Inject constructor(
 
         // Perform the login, the session authentication cookie is automatically stored
         val loginRequest = Request.Builder().url(configHandler.getMoodleUrl() + MOODLE_LOGIN_URL).post(formBody).build()
-        val loginResponse = http.newCall(loginRequest).execute()
+        return http.newCall(loginRequest).execute()
+    }
 
-        // Make sure the authentication was successful
-        if (!loginResponse.isSuccessful) {
-            exitWithError("Could not authenticate, please check your internet connection.")
-        }
+    private fun authenticateUsingCookie(): Response {
+        http.cookieJar.saveFromResponse(
+            configHandler.getMoodleUrl().toHttpUrl(),
+            listOf(createMoodleCookie(credentialStore.getMoodleCookie()))
+        )
 
-        // If we got a login token again, we are not authenticated
-        if (parseLoginTokenElement(loginResponse) != null) {
-            exitWithError("Authentication failed, please check your credentials")
-        }
+        val homeUrl = configHandler.getMoodleUrl() + MOODLE_HOME_URL
+        val request = Request.Builder().url(homeUrl).build()
+        return http.newCall(request).execute()
+    }
 
-        authenticated = true // Only authenticate once
-        printlnGreen("Authentication successful")
+    private fun createMoodleCookie(value: String): Cookie {
+        // Domain has to exclude www., use moddle url as input
+        val domain = URI(configHandler.getMoodleUrl()).host.split("www.").last()
+        return Cookie.Builder()
+            .hostOnlyDomain(domain)
+            .path("/")
+            .name(COOKIE_AUTH_NAME)
+            .value(value)
+            .secure()
+            .build()
     }
 
     private fun getLoginToken(): String {
@@ -64,5 +96,7 @@ class MoodleAuthenticator @Inject constructor(
 
     private companion object {
         const val MOODLE_LOGIN_URL = "login/index.php"
+        const val MOODLE_HOME_URL = "my/" // Link to homepage
+        const val COOKIE_AUTH_NAME = "MoodleSessionlmsfhooe"
     }
 }
