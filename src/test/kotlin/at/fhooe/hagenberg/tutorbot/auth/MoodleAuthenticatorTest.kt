@@ -6,8 +6,7 @@ import at.fhooe.hagenberg.tutorbot.testutil.rules.MockServerRule
 import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.getFormValue
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -55,6 +54,17 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     }
 
     @Test
+    fun `Cookie authorization is performed when setting is set`() {
+        mockServer.enqueueResource("websites/Blank.html")
+        every { configHandler.getMoodleAuthMethod() } returns ConfigHandler.AuthMethod.COOKIE
+        every { credentialStore.getMoodleCookie() } returns "VALID_COOKIE"
+
+        moodleAuthenticator.authenticate()
+
+        verify { credentialStore.getMoodleCookie() }
+    }
+
+    @Test
     fun `No action is taken if already authenticated`() {
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResource("websites/Blank.html")
@@ -74,7 +84,18 @@ class MoodleAuthenticatorTest : CommandLineTest() {
     }
 
     @Test
-    fun `Program exits if authentication request fails`() {
+    fun `Program exits if login authentication request fails`() {
+        mockServer.enqueueResource("websites/LoggedOut.html")
+        mockServer.enqueueResponseCode(500)
+
+        assertThrows<ProgramExitError> { moodleAuthenticator.authenticate() }
+    }
+
+    @Test
+    fun `Program exits if cookie authentication request fails`() {
+        every { configHandler.getMoodleAuthMethod() } returns ConfigHandler.AuthMethod.COOKIE
+        every { credentialStore.getMoodleCookie() } returns "INVALID_COOKIE"
+
         mockServer.enqueueResource("websites/LoggedOut.html")
         mockServer.enqueueResponseCode(500)
 

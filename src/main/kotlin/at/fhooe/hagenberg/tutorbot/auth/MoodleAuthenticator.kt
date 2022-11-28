@@ -66,13 +66,14 @@ class MoodleAuthenticator @Inject constructor(
             listOf(createMoodleCookie(credentialStore.getMoodleCookie()))
         )
 
-        val homeUrl = configHandler.getMoodleUrl() + MOODLE_HOME_URL
+        // Test request will be redirected to /login if cookie is invalid
+        val homeUrl = configHandler.getMoodleUrl()
         val request = Request.Builder().url(homeUrl).build()
         return http.newCall(request).execute()
     }
 
     private fun createMoodleCookie(value: String): Cookie {
-        // Domain has to exclude www., use moddle url as input
+        // Domain has to exclude www., use moodle url as input
         val domain = URI(configHandler.getMoodleUrl()).host.split("www.").last()
         return Cookie.Builder()
             .hostOnlyDomain(domain)
@@ -96,7 +97,6 @@ class MoodleAuthenticator @Inject constructor(
 
     private companion object {
         const val MOODLE_LOGIN_URL = "login/index.php"
-        const val MOODLE_HOME_URL = "my/" // Link to homepage
         const val COOKIE_AUTH_NAME = "MoodleSessionlmsfhooe"
     }
 }

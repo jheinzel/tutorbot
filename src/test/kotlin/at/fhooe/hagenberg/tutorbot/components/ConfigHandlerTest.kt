@@ -20,6 +20,7 @@ class ConfigHandlerTest {
         assertEquals("config-moodle-username", configHandler.getMoodleUsername())
         assertEquals("config-moodle-password", configHandler.getMoodlePassword())
         assertEquals("config-moodle-url", configHandler.getMoodleUrl())
+        assertEquals(ConfigHandler.AuthMethod.COOKIE, configHandler.getMoodleAuthMethod())
         assertEquals("config-email-address", configHandler.getEmailAddress())
         assertEquals("config-email-username", configHandler.getEmailUsername())
         assertEquals("config-email-password", configHandler.getEmailPassword())
@@ -64,6 +65,14 @@ class ConfigHandlerTest {
         assertEquals("config-username", configHandler.getMoodleUsername())
         assertNull(configHandler.getBaseDir())
         assertNull(configHandler.getJavaLanguageLevel())
+    }
+
+    @Test
+    fun `Moodle authorization config defaults to USER_PASS when not present`() {
+        val config = File(ClassLoader.getSystemResource("config/missing.properties").toURI())
+        val configHandler = ConfigHandler(config)
+
+        assertEquals(ConfigHandler.AuthMethod.USER_PASS, configHandler.getMoodleAuthMethod())
     }
 
     @Test
