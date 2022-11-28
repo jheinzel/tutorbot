@@ -1,6 +1,6 @@
-[![Build Status](https://img.shields.io/github/workflow/status/simonschiller/tutorbot/CI)](https://github.com/simonschiller/tutorbot/actions)
-[![GitHub Release](https://img.shields.io/github/v/release/simonschiller/tutorbot)](https://github.com/simonschiller/tutorbot/releases)
-[![License](https://img.shields.io/github/license/simonschiller/tutorbot)](https://github.com/simonschiller/tutorbot/blob/master/LICENSE)
+[![Build Status](https://img.shields.io/github/workflow/status/jheinzel/tutorbot/CI)](https://github.com/jheinzel/tutorbot/actions)
+[![GitHub Release](https://img.shields.io/github/v/release/jheinzel/tutorbot)](https://github.com/jheinzel/tutorbot/releases)
+[![License](https://img.shields.io/github/license/jheinzel/tutorbot)](https://github.com/jheinzel/tutorbot/blob/master/LICENSE)
 
 # Tutorbot
 
