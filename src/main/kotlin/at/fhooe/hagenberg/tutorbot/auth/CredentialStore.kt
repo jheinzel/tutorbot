@@ -10,6 +10,7 @@ import javax.inject.Singleton
 class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
     private var moodleUsername: String? = null
     private var moodlePassword: String? = null
+    private var moodleCookie: String? = null
     private var emailAddress: String? = null
     private var emailUsername: String? = null
     private var emailPassword: String? = null
@@ -40,6 +41,11 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
         return moodlePassword ?: promptPasswordInput("Enter moodle password ($moodleUsername):").also { moodlePassword = it }
     }
 
+    fun getMoodleCookie(): String {
+        return moodleCookie
+            ?: promptTextInput("Enter authorization cookie value ($COOKIE_AUTH_NAME):").also { moodleCookie = it }
+    }
+
     fun getEmailPassword(): String {
         // return emailPassword ?: promptTextInput("Enter email password:").also { emailPassword = it }
         return emailPassword ?: promptPasswordInput("Enter email password:").also { emailPassword = it }
@@ -47,5 +53,9 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
 
     fun setEmailPassword(value: String?) {
         emailPassword = value;
+    }
+
+    companion object {
+        const val COOKIE_AUTH_NAME = "MoodleSessionlmsfhooe"
     }
 }
