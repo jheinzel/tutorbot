@@ -3,7 +3,6 @@ package at.fhooe.hagenberg.tutorbot.auth
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.printlnGreen
-import at.fhooe.hagenberg.tutorbot.util.printlnRed
 import at.fhooe.hagenberg.tutorbot.util.value
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -78,7 +77,7 @@ class MoodleAuthenticator @Inject constructor(
         return Cookie.Builder()
             .hostOnlyDomain(domain)
             .path("/")
-            .name(COOKIE_AUTH_NAME)
+            .name(CredentialStore.COOKIE_AUTH_NAME)
             .value(value)
             .secure()
             .build()
@@ -97,6 +96,5 @@ class MoodleAuthenticator @Inject constructor(
 
     private companion object {
         const val MOODLE_LOGIN_URL = "login/index.php"
-        const val COOKIE_AUTH_NAME = "MoodleSessionlmsfhooe"
     }
 }

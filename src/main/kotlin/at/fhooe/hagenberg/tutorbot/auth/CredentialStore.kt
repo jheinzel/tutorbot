@@ -42,7 +42,8 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
     }
 
     fun getMoodleCookie(): String {
-        return moodleCookie ?: promptTextInput("Enter authorization cookie value (MoodleSessionlmsfhooe):").also { moodleCookie = it }
+        return moodleCookie
+            ?: promptTextInput("Enter authorization cookie value ($COOKIE_AUTH_NAME):").also { moodleCookie = it }
     }
 
     fun getEmailPassword(): String {
@@ -52,5 +53,9 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
 
     fun setEmailPassword(value: String?) {
         emailPassword = value;
+    }
+
+    companion object {
+        const val COOKIE_AUTH_NAME = "MoodleSessionlmsfhooe"
     }
 }
