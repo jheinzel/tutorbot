@@ -29,6 +29,10 @@ jobs:
             ${{ runner.os }}-gradle-caches-
       - name: Build
         run: ./gradlew jar
+      - name: Zip for release
+        run: |
+          cp -f ./build/libs/tutorbot.jar ./tutorbot/tutorbot.jar 
+          zip -FSr tutorbot.zip ./tutorbot
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -45,6 +49,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/libs/tutorbot.jar
-          asset_name: tutorbot.jar
-          asset_content_type: application/java-archive
+          asset_path: ./tutorbot.zip
+          asset_name: tutorbot.zip
+          asset_content_type: application/zip
