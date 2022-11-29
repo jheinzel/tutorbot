@@ -24,6 +24,16 @@ fun promptBooleanInput(prompt: String): Boolean {
     return textInput.trim().toLowerCase() in positiveAnswers
 }
 
+fun promptNumberInput(prompt: String): Int {
+    print("$prompt ")
+    var nr: Int?
+    do {
+        nr = readLine()?.toIntOrNull()
+        if(nr == null) printlnRed("ERROR: Not a number, please try again.")
+    }while(nr == null)
+    return nr
+}
+
 fun exitWithError(message: String): Nothing {
     printlnRed("ERROR: $message")
     throw ProgramExitError()
