@@ -34,8 +34,9 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
         exerciseDirectory = dir
     }
 
-    fun getChooseReviewsAmount(): Int? = getProperty("choose.reviews.amount")?.toIntOrNull()
-    fun getFinishedReviewsDir(): String? = getProperty("finished.reviews.dir")
+    fun getFeedbackAmount(): Int? = getProperty("feedback.amount")?.toIntOrNull()
+    fun getFeedbackRandomAmount(): String? = getProperty("feedback.random.amount")
+    fun getFeedbackDir(): String? = getProperty("feedback.dir")
 
     fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
 

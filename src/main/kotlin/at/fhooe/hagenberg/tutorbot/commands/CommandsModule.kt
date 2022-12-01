@@ -35,8 +35,8 @@ interface CommandsModule {
 
     @Binds
     @IntoMap
-    @CommandKey(ChooseReviewsCommand::class)
-    fun bindChooseReviewsCommand(command: ChooseReviewsCommand): BaseCommand
+    @CommandKey(ChooseFeedbackCommand::class)
+    fun bindChooseFeedbackCommand(command: ChooseFeedbackCommand): BaseCommand
 
     @Binds
     @IntoMap
