@@ -21,6 +21,7 @@ class FeedbackHelper @Inject constructor(
 
     /**
      * Reads all review files from a directory matching with the STUDENT_NR_PATTERN ignoring other files.
+     * Student numbers are normalized to lower case.
      */
     private fun readAllReviewsFromDir(dir: File): List<Review> {
         val studentNrRegex = STUDENT_NR_PATTERN.toRegex()
@@ -30,14 +31,14 @@ class FeedbackHelper @Inject constructor(
                 val submitter = firstMatch.value
                 firstMatch.next()?.let { secondMatch ->
                     val reviewer = secondMatch.value
-                    Review(f.name, submitter, reviewer)
+                    Review(f.name, submitter.toLowerCase(), reviewer.toLowerCase())
                 }
             }
         } ?: listOf()
     }
 
     /**
-     * Gathers the amount of feedbacks the students have received.
+     * Gathers the amount of feedbacks the students have received. Student number keys normalized to lower case.
      */
     fun readFeedbackCountForStudents(): Map<String, FeedbackCount> {
         val dirInput = configHandler.getFeedbackDir()
@@ -63,7 +64,7 @@ class FeedbackHelper @Inject constructor(
     }
 
     /**
-     * Gets all available reviews from an exercise.
+     * Gets all available reviews from an exercise. Student numbers normalized to lower case.
      */
     fun readReviewsForExercise(): List<Review> {
         val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
