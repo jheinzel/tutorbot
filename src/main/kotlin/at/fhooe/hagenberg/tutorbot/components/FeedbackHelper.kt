@@ -9,8 +9,12 @@ import javax.inject.Inject
 class FeedbackHelper @Inject constructor(
     private val configHandler: ConfigHandler
 ) {
-    // Tracks amount of feedbacks a student has received on submissions and reviews.
-    data class FeedbackCount(val submission: Int, val review: Int)
+    // Tracks amount of feedbacks a student has received on submissions and reviews. Ordered by submission first then review.
+    data class FeedbackCount(val submission: Int, val review: Int) : Comparable<FeedbackCount> {
+        override fun compareTo(other: FeedbackCount): Int {
+            return compareValuesBy(this, other, { it.submission }, { it.review })
+        }
+    }
 
     // Represents a Review, which has a student who submitted the code and one who reviewed it.
     data class Review(
@@ -23,7 +27,7 @@ class FeedbackHelper @Inject constructor(
      * Reads all review files from a directory matching with the STUDENT_NR_PATTERN ignoring other files.
      * Student numbers are normalized to lower case.
      */
-    private fun readAllReviewsFromDir(dir: File): List<Review> {
+    private fun readAllReviewsFromDir(dir: File): Set<Review> {
         val studentNrRegex = STUDENT_NR_PATTERN.toRegex()
         return dir.listFiles()?.mapNotNull { f ->
             // Match first student number with submitter, second as reviewer
@@ -34,7 +38,7 @@ class FeedbackHelper @Inject constructor(
                     Review(f.name, submitter.toLowerCase(), reviewer.toLowerCase())
                 }
             }
-        } ?: listOf()
+        }?.toSet() ?: setOf()
     }
 
     /**
@@ -60,13 +64,13 @@ class FeedbackHelper @Inject constructor(
                 ?: FeedbackCount(0, 1)
         }
 
-        return countMap.toMap()
+        return countMap
     }
 
     /**
      * Gets all available reviews from an exercise. Student numbers normalized to lower case.
      */
-    fun readReviewsForExercise(): List<Review> {
+    fun readReviewsForExercise(): Set<Review> {
         val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
         val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
         val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
