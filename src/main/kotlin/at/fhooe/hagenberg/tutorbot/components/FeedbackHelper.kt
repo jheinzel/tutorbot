@@ -1,14 +1,9 @@
 package at.fhooe.hagenberg.tutorbot.components
 
-import at.fhooe.hagenberg.tutorbot.util.exitWithError
-import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import java.io.File
-import java.nio.file.Path
 import javax.inject.Inject
 
-class FeedbackHelper @Inject constructor(
-    private val configHandler: ConfigHandler
-) {
+class FeedbackHelper @Inject constructor() {
     // Tracks amount of feedbacks a student has received on submissions and reviews. Ordered by submission first then review.
     data class FeedbackCount(val submission: Int, val review: Int) : Comparable<FeedbackCount> {
         override fun compareTo(other: FeedbackCount): Int {
@@ -27,7 +22,7 @@ class FeedbackHelper @Inject constructor(
      * Reads all review files from a directory matching with the STUDENT_NR_PATTERN ignoring other files.
      * Student numbers are normalized to lower case.
      */
-    private fun readAllReviewsFromDir(dir: File): Set<Review> {
+    fun readAllReviewsFromDir(dir: File): Set<Review> {
         val studentNrRegex = STUDENT_NR_PATTERN.toRegex()
         return dir.listFiles()?.mapNotNull { f ->
             // Match first student number with submitter, second as reviewer
@@ -44,15 +39,7 @@ class FeedbackHelper @Inject constructor(
     /**
      * Gathers the amount of feedbacks the students have received. Student number keys normalized to lower case.
      */
-    fun readFeedbackCountForStudents(): Map<String, FeedbackCount> {
-        val dirInput = configHandler.getFeedbackDir()
-            ?: promptTextInput("Enter directory with previous feedbacks (relative or absolute path):")
-        val feedbackDir = Path.of(dirInput).toFile()
-
-        if (!feedbackDir.isDirectory) {
-            exitWithError("Location $feedbackDir does not point to a valid directory.")
-        }
-
+    fun readFeedbackCountForStudents(feedbackDir: File): Map<String, FeedbackCount> {
         val reviews = readAllReviewsFromDir(feedbackDir)
         val countMap = mutableMapOf<String, FeedbackCount>()
         // Each occurrence as submitter increases the FeedbackCount.submissions, same for reviewer
@@ -65,18 +52,6 @@ class FeedbackHelper @Inject constructor(
         }
 
         return countMap
-    }
-
-    /**
-     * Gets all available reviews from an exercise. Student numbers normalized to lower case.
-     */
-    fun readReviewsForExercise(): Set<Review> {
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
-        val targetDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir).toFile()
-
-        return readAllReviewsFromDir(targetDirectory)
     }
 
     companion object {

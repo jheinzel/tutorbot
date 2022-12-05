@@ -5,6 +5,7 @@ import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
 import at.fhooe.hagenberg.tutorbot.util.*
 import picocli.CommandLine.Command
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -55,9 +56,14 @@ class ChooseFeedbackCommand @Inject constructor(
      * Chooses reviews to be selected for feedback. Students who have gotten the least feedbacks on submissions and reviews are preferred.
      * Random reviews regardless of their received feedback amount may also be chosen if defined (useful to avoid predictability).
      */
-    private fun pickReviewsToFeedback(reviews: MutableSet<Review>, feedbackCount: Int, randomCount: Int): Set<Review> {
+    private fun pickReviewsToFeedback(
+        reviews: MutableSet<Review>,
+        feedbackDir: File,
+        feedbackCount: Int,
+        randomCount: Int
+    ): Set<Review> {
         if (reviews.isEmpty()) exitWithError("Reviews folder is empty!")
-        val feedbackCountMap = feedbackHelper.readFeedbackCountForStudents()
+        val feedbackCountMap = feedbackHelper.readFeedbackCountForStudents(feedbackDir)
         val chosenReviews = mutableSetOf<Review>()
 
         val canStillPickReviews = { reviews.isNotEmpty() && chosenReviews.size < feedbackCount }
@@ -104,17 +110,30 @@ class ChooseFeedbackCommand @Inject constructor(
     }
 
     override fun execute() {
+        // Get folder of previous feedbacks
+        val feedbackDirPath = configHandler.getFeedbackDir()
+            ?: promptTextInput("Enter directory with previous feedbacks (relative or absolute path):")
+        val feedbackDir = Path.of(feedbackDirPath).toFile()
+        if (!feedbackDir.isDirectory) exitWithError("Location $feedbackDir does not point to a valid directory.")
+        // Current ex. reviews path
+        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
+        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
+        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
+
+        // Count arguments
         val feedbackCount =
-            configHandler.getFeedbackAmount() ?: promptNumberInput("Enter amount of reviews to pick:")
+            configHandler.getFeedbackAmount()
+                ?: promptNumberInput("Enter amount of reviews to pick:")
         if (feedbackCount < 1) exitWithError("Feedback count must at least be 1.")
         val randomCount =
             configHandler.getFeedbackRandomAmount()
                 ?: promptNumberInput("Enter amount of random reviews to pick (0 <= amount <= $feedbackCount):")
         if (randomCount < 0 || randomCount > feedbackCount) exitWithError("Random feedback count must be >= 0 and <= feedback count.")
 
-
-        val reviews = feedbackHelper.readReviewsForExercise()
-        val reviewsToFeedback = pickReviewsToFeedback(reviews.toMutableSet(), feedbackCount, randomCount)
+        // Pick reviews
+        val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
+        val reviewsToFeedback = pickReviewsToFeedback(reviews.toMutableSet(), feedbackDir, feedbackCount, randomCount)
         val reviewsToMove = reviews - reviewsToFeedback
 
         if (reviewsToFeedback.size != feedbackCount)
@@ -122,8 +141,6 @@ class ChooseFeedbackCommand @Inject constructor(
         else
             printlnGreen("Successfully selected $feedbackCount reviews.")
 
-        val sourceDirectory =
-            Path.of(configHandler.getBaseDir()!!, configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
         val targetDirectory = sourceDirectory.resolve(NOT_SELECTED_DIR)
         if (!targetDirectory.toFile().mkdir()) {
             if (!promptBooleanInput("Target location $targetDirectory already exists, should its contents be overwritten?")) {
@@ -131,7 +148,7 @@ class ChooseFeedbackCommand @Inject constructor(
             }
         }
 
-        // Move reviews not selected to feedback in subfolder
+        // Move reviews not selected for feedback in subfolder
         for (rev in reviewsToMove) {
             try {
                 Files.move(
