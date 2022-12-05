@@ -46,7 +46,7 @@ class FeedbackHelper @Inject constructor(
      */
     fun readFeedbackCountForStudents(): Map<String, FeedbackCount> {
         val dirInput = configHandler.getFeedbackDir()
-            ?: promptTextInput("Enter directory with finished feedbacks (relative or absolute path):")
+            ?: promptTextInput("Enter directory with previous feedbacks (relative or absolute path):")
         val feedbackDir = Path.of(dirInput).toFile()
 
         if (!feedbackDir.isDirectory) {

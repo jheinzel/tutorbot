@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 @Command(
     name = "choose-feedback",
-    description = ["Choose reviews to give feedback on. Students who have gotten less feedbacks on submissions or reviews have a greater chance of being picked. To avoid predictability, randomness is also added."]
+    description = ["Choose reviews to give feedback on. Students who have gotten less feedbacks on submissions or reviews have a greater chance of being picked."]
 )
 class ChooseFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,
@@ -74,6 +74,7 @@ class ChooseFeedbackCommand @Inject constructor(
         val studentsWithNoFeedback = reviews
             .flatMap { r -> listOf(r.subStudentNr, r.revStudentNr) }
             .distinct()
+            .filter { s -> s !in feedbackCountMap }
             .shuffled(random)
             .toMutableList()
         while (canStillPickReviews() && studentsWithNoFeedback.isNotEmpty()) {
@@ -99,26 +100,27 @@ class ChooseFeedbackCommand @Inject constructor(
             }
         }
 
-        if (chosenReviews.size != feedbackCount)
-            printlnCyan("Could only pick ${chosenReviews.size}/$feedbackCount reviews to avoid overlapping.")
-        else
-            printlnGreen("Successfully selected $feedbackCount reviews.")
         return chosenReviews
     }
 
     override fun execute() {
         val feedbackCount =
             configHandler.getFeedbackAmount() ?: promptNumberInput("Enter amount of reviews to pick:")
+        if (feedbackCount < 1) exitWithError("Feedback count must at least be 1.")
         val randomCount =
             configHandler.getFeedbackRandomAmount()
                 ?: promptNumberInput("Enter amount of random reviews to pick (0 <= amount <= $feedbackCount):")
-
-        if (feedbackCount < 1) exitWithError("Feedback count must at least be 1.")
         if (randomCount < 0 || randomCount > feedbackCount) exitWithError("Random feedback count must be >= 0 and <= feedback count.")
+
 
         val reviews = feedbackHelper.readReviewsForExercise()
         val reviewsToFeedback = pickReviewsToFeedback(reviews.toMutableSet(), feedbackCount, randomCount)
         val reviewsToMove = reviews - reviewsToFeedback
+
+        if (reviewsToFeedback.size != feedbackCount)
+            printlnCyan("Could only pick ${reviewsToFeedback.size}/$feedbackCount reviews to avoid overlapping.")
+        else
+            printlnGreen("Successfully selected $feedbackCount reviews.")
 
         val sourceDirectory =
             Path.of(configHandler.getBaseDir()!!, configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
