@@ -26,31 +26,25 @@ class ChooseFeedbackCommand @Inject constructor(
      * Adds the review to the chosenReviews if both participating students are not in the chosenReviews already.
      * @return true if added
      */
-    private fun addIfFeedbackAllowed(review: Review, chosenReviews: MutableCollection<Review>): Boolean =
+    private fun addIfAllowed(review: Review, chosenReviews: MutableCollection<Review>): Boolean =
         if (chosenReviews.none { r ->
                 r.subStudentNr == review.revStudentNr || r.subStudentNr == review.subStudentNr
                         || r.revStudentNr == review.revStudentNr || r.revStudentNr == review.subStudentNr
             }) chosenReviews.add(review) else false
 
     /**
-     *  First try to add review where student is submitter, if not possible try reviewer.
-     *  Also removes entries from the input reviews.
+     * Tries to pop a Review from the reviews, which either has the student as submitter or reviewer.
+     * @return Review if present in reviews
      */
-    private fun tryAddReviewAsSubmitterOrReviewer(
+    private fun tryPopReviewForStudent(
         student: String,
         reviews: MutableCollection<Review>,
-        chosenReviews: MutableCollection<Review>
-    ) {
-        if (reviews.firstOrNull { r -> r.subStudentNr == student }?.let {
-                reviews.remove(it)
-                addIfFeedbackAllowed(it, chosenReviews)
-            } != true) {
-            reviews.firstOrNull { r -> r.revStudentNr == student }?.let {
-                reviews.remove(it)
-                addIfFeedbackAllowed(it, chosenReviews)
-            }
-        }
-    }
+        asSubmitter: Boolean
+    ): Review? =
+        when (asSubmitter) {
+            true -> reviews.firstOrNull { r -> r.subStudentNr == student }
+            false -> reviews.firstOrNull { r -> r.revStudentNr == student }
+        }?.also { reviews.remove(it) }
 
     /**
      * Chooses reviews to be selected for feedback. Students who have gotten the least feedbacks on submissions and reviews are preferred.
@@ -62,16 +56,14 @@ class ChooseFeedbackCommand @Inject constructor(
         feedbackCount: Int,
         randomCount: Int
     ): Set<Review> {
-        if (reviews.isEmpty()) exitWithError("Reviews folder is empty!")
         val feedbackCountMap = feedbackHelper.readFeedbackCountForStudents(feedbackDir)
         val chosenReviews = mutableSetOf<Review>()
-
         val canStillPickReviews = { reviews.isNotEmpty() && chosenReviews.size < feedbackCount }
 
         // 1) Chose random reviews first
         while (canStillPickReviews() && chosenReviews.size < randomCount) {
             val review = reviews.random().also { reviews.remove(it) }
-            addIfFeedbackAllowed(review, chosenReviews)
+            addIfAllowed(review, chosenReviews)
         }
 
         if (!canStillPickReviews()) return chosenReviews
@@ -84,9 +76,10 @@ class ChooseFeedbackCommand @Inject constructor(
             .shuffled(random)
             .toMutableList()
         while (canStillPickReviews() && studentsWithNoFeedback.isNotEmpty()) {
-            studentsWithNoFeedback.first().also {
-                studentsWithNoFeedback.remove(it)
-                tryAddReviewAsSubmitterOrReviewer(it, reviews, chosenReviews)
+            val student = studentsWithNoFeedback.first()
+            studentsWithNoFeedback.remove(student)
+            tryPopReviewForStudent(student, reviews, true)?.also {
+                addIfAllowed(it, chosenReviews)
             }
         }
 
@@ -100,9 +93,13 @@ class ChooseFeedbackCommand @Inject constructor(
             .sortedBy { pair -> pair.second }
             .toMutableList()
         while (canStillPickReviews() && feedbackOrdering.isNotEmpty()) {
-            feedbackOrdering.first().also {
-                feedbackOrdering.remove(it)
-                tryAddReviewAsSubmitterOrReviewer(it.first, reviews, chosenReviews)
+            val picked = feedbackOrdering.first()
+            feedbackOrdering.remove(picked)
+
+            // Try to keep amount of feedbacks on submissions and reviews the same
+            val shouldPickSubmission = picked.second.submission <= picked.second.review
+            tryPopReviewForStudent(picked.first, reviews, shouldPickSubmission)?.also {
+                addIfAllowed(it, chosenReviews)
             }
         }
 
@@ -110,16 +107,19 @@ class ChooseFeedbackCommand @Inject constructor(
     }
 
     override fun execute() {
+        // Current ex. reviews path
+        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
+        val exerciseSubDir =
+            configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
+        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
+        val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
+        if (reviews.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
         // Get folder of previous feedbacks
         val feedbackDirPath = configHandler.getFeedbackDir()
             ?: promptTextInput("Enter directory with previous feedbacks (relative or absolute path):")
         val feedbackDir = Path.of(feedbackDirPath).toFile()
         if (!feedbackDir.isDirectory) exitWithError("Location $feedbackDir does not point to a valid directory.")
-        // Current ex. reviews path
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
-        val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
 
         // Count arguments
         val feedbackCount =
@@ -132,14 +132,14 @@ class ChooseFeedbackCommand @Inject constructor(
         if (randomCount < 0 || randomCount > feedbackCount) exitWithError("Random feedback count must be >= 0 and <= feedback count.")
 
         // Pick reviews
-        val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
-        val reviewsToFeedback = pickReviewsToFeedback(reviews.toMutableSet(), feedbackDir, feedbackCount, randomCount)
+        val reviewsToFeedback =
+            pickReviewsToFeedback(reviews.toMutableSet(), feedbackDir, feedbackCount, randomCount)
         val reviewsToMove = reviews - reviewsToFeedback
 
         if (reviewsToFeedback.size != feedbackCount)
             printlnCyan("Could only pick ${reviewsToFeedback.size}/$feedbackCount reviews to avoid overlapping.")
         else
-            printlnGreen("Successfully selected $feedbackCount reviews.")
+            printlnGreen("Picked $feedbackCount reviews.")
 
         val targetDirectory = sourceDirectory.resolve(NOT_SELECTED_DIR)
         if (!targetDirectory.toFile().mkdir()) {
@@ -161,6 +161,8 @@ class ChooseFeedbackCommand @Inject constructor(
                 exitWithError(ex.message ?: "Moving files failed with $rev.")
             }
         }
+
+        printlnGreen("Finished selecting reviews.")
     }
 
     private companion object {
