@@ -35,7 +35,7 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
     }
 
     fun getFeedbackAmount(): Int? = getProperty("feedback.amount")?.toIntOrNull()
-    fun getFeedbackRandomAmount(): String? = getProperty("feedback.random.amount")
+    fun getFeedbackRandomAmount(): Int? = getProperty("feedback.random.amount")?.toIntOrNull()
     fun getFeedbackDir(): String? = getProperty("feedback.dir")
 
     fun getJavaLanguageLevel(): String? = getProperty("plagiarism.language.java.version")
