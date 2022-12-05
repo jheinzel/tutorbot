@@ -39,7 +39,7 @@ class FeedbackHelper @Inject constructor() {
     /**
      * Gathers the amount of feedbacks the students have received. Student number keys normalized to lower case.
      */
-    fun readFeedbackCountForStudents(feedbackDir: File): Map<String, FeedbackCount> {
+    fun readFeedbackCountFromReviews(feedbackDir: File): Map<String, FeedbackCount> {
         val reviews = readAllReviewsFromDir(feedbackDir)
         val countMap = mutableMapOf<String, FeedbackCount>()
         // Each occurrence as submitter increases the FeedbackCount.submissions, same for reviewer
@@ -52,6 +52,29 @@ class FeedbackHelper @Inject constructor() {
         }
 
         return countMap
+    }
+
+    fun readFeedbackCountFromCsv(csvFile: File): Map<String, FeedbackCount> {
+        csvFile.bufferedReader().use {
+            it.readLine() // ignore header
+            return it.lineSequence()
+                .filter { line -> line.isNotBlank() }
+                .map { line ->
+                    val (student, submission, review) = line.split(',', limit = 3)
+                    student to FeedbackCount(submission.toInt(), review.toInt())
+                }.toMap()
+        }
+    }
+
+    fun writeFeedbackCountToCsv(csvFile: File, feedbackCount: Map<String, FeedbackCount>) {
+        csvFile.bufferedWriter().use {
+            it.write("student,submissions,reviews")
+            it.newLine()
+            feedbackCount.forEach { (s, f) ->
+                it.write("$s,${f.submission},${f.review}")
+                it.newLine()
+            }
+        }
     }
 
     companion object {

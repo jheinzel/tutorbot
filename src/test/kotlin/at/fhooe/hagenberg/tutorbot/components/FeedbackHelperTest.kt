@@ -58,21 +58,21 @@ class FeedbackHelperTest : CommandLineTest() {
     @Test
     fun `Read feedback returns empty when dir empty`() {
         val emptyDir = File(fileSystem.directory.absolutePath)
-        val res = feedbackHelper.readFeedbackCountForStudents(emptyDir)
+        val res = feedbackHelper.readFeedbackCountFromReviews(emptyDir)
 
         assert(res.isEmpty())
     }
 
     @Test
     fun `Read feedback has key for every lower case student number`() {
-        val res = feedbackHelper.readFeedbackCountForStudents(reviewDir)
+        val res = feedbackHelper.readFeedbackCountFromReviews(reviewDir)
 
         assert(res.all { f -> f.key in lowerCaseStudentNumbers })
     }
 
     @Test
     fun `Read feedback FeedbackCount has correct amount of submissions and reviews for each student`() {
-        val res = feedbackHelper.readFeedbackCountForStudents(reviewDir)
+        val res = feedbackHelper.readFeedbackCountFromReviews(reviewDir)
 
         assert(studentFeedbackCount.all { s -> res[s.first] == s.second })
     }

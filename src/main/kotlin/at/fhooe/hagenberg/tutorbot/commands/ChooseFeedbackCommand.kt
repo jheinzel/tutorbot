@@ -56,7 +56,7 @@ class ChooseFeedbackCommand @Inject constructor(
         feedbackCount: Int,
         randomCount: Int
     ): Set<Review> {
-        val feedbackCountMap = feedbackHelper.readFeedbackCountForStudents(feedbackDir)
+        val feedbackCountMap = feedbackHelper.readFeedbackCountFromReviews(feedbackDir)
         val chosenReviews = mutableSetOf<Review>()
         val canStillPickReviews = { reviews.isNotEmpty() && chosenReviews.size < feedbackCount }
 
