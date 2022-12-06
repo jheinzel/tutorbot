@@ -75,17 +75,6 @@ class ReviewsCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Reviews directory is read from console`() {
-        every { configHandler.getBaseDir() } returns null
-        every { configHandler.getExerciseSubDir() } returns null
-        every { configHandler.getReviewsSubDir() } returns null
-        systemIn.provideLines(fileSystem.directory.absolutePath, exerciseLoc, reviewLoc, "www.assignment.com", "N")
-
-        reviewsCommand.execute()
-        verifyReviews()
-    }
-
-    @Test
     fun `Program exits if no reviews are found`() {
         every { moodleClient.getHtmlDocument("www.assignment.com") } returns getHtmlResource("websites/Blank.html")
         systemIn.provideLines(fileSystem.directory.absolutePath, "Yes", "www.assignment.com")

@@ -40,15 +40,6 @@ class PlagiarismCheckerTest : CommandLineTest() {
     }
 
     @Test
-    fun `Java is detected correctly`() {
-        every { configHandler.getJavaLanguageLevel() } returns null
-        File(fileSystem.directory, "test.java").createNewFile()
-        plagiarismChecker.generatePlagiarismReport(fileSystem.directory)
-
-        assertTrue(args.captured.joinToString(separator = " ").contains("-l java19"))
-    }
-
-    @Test
     fun `Java language version from config is used if available`() {
         every { configHandler.getJavaLanguageLevel() } returns "java11"
         File(fileSystem.directory, "test.java").createNewFile()

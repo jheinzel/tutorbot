@@ -38,7 +38,9 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
 
     fun getMoodlePassword(): String {
         // return moodlePassword ?: promptTextInput("Enter moodle password ($moodleUsername):").also { moodlePassword = it }
-        return moodlePassword ?: promptPasswordInput("Enter moodle password ($moodleUsername):").also { moodlePassword = it }
+        return moodlePassword ?: promptPasswordInput("Enter moodle password ($moodleUsername):").also {
+            moodlePassword = it
+        }
     }
 
     fun getMoodleCookie(): String {
@@ -52,7 +54,7 @@ class CredentialStore @Inject constructor(configHandler: ConfigHandler) {
     }
 
     fun setEmailPassword(value: String?) {
-        emailPassword = value;
+        emailPassword = value
     }
 
     companion object {

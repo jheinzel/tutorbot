@@ -125,7 +125,7 @@ class MailCommandTest : CommandLineTest() {
     private fun verifySentMails(expectedSubject: String = "Subject", expectedBody: String = "Body") {
         verifyTestMail()
 
-        val emailSuffix = configHandler.getStudentsEmailSuffix();
+        val emailSuffix = configHandler.getStudentsEmailSuffix()
         val mail = MailClient.Mail("S0@$emailSuffix", listOf("S0@$emailSuffix"), expectedSubject, expectedBody, fileSystem.file)
 
         val firstMail = mail.copy(
