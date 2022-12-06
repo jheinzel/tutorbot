@@ -54,6 +54,10 @@ class FeedbackHelper @Inject constructor() {
         return countMap
     }
 
+    /**
+     * Reads the persisted feedback counts for each student from a CSV file if possible.
+     * Student numbers are normalized to lower case. Format: student,submissions,reviews
+     */
     fun readFeedbackCountFromCsv(csvFile: File): Map<String, FeedbackCount> {
         csvFile.bufferedReader().use {
             it.readLine() // ignore header
@@ -61,17 +65,21 @@ class FeedbackHelper @Inject constructor() {
                 .filter { line -> line.isNotBlank() }
                 .map { line ->
                     val (student, submission, review) = line.split(',', limit = 3)
-                    student to FeedbackCount(submission.toInt(), review.toInt())
+                    student.toLowerCase() to FeedbackCount(submission.toInt(), review.toInt())
                 }.toMap()
         }
     }
 
+    /**
+     * Writes the feedback count to a CSV file.
+     * Student numbers are normalized to lower case. Format: student,submissions,reviews
+     */
     fun writeFeedbackCountToCsv(csvFile: File, feedbackCount: Map<String, FeedbackCount>) {
         csvFile.bufferedWriter().use {
             it.write("student,submissions,reviews")
             it.newLine()
             feedbackCount.forEach { (s, f) ->
-                it.write("$s,${f.submission},${f.review}")
+                it.write("${s.toLowerCase()},${f.submission},${f.review}")
                 it.newLine()
             }
         }
