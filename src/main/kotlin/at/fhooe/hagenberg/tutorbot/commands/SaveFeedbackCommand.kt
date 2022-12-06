@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @Command(
     name = "save-feedback",
-    description = ["Reads the feedback amount from an exercise and appends it to the feedback CSV file."]
+    description = ["Counts the feedbacks of an exercise and appends the data to the feedback CSV file"]
 )
 class SaveFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,

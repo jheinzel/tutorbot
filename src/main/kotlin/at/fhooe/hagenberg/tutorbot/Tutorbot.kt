@@ -11,10 +11,10 @@ import kotlin.system.exitProcess
     subcommands = [
         SubmissionsCommand::class,
         ReviewsCommand::class,
-        ChooseFeedbackCommand::class,
-        SaveFeedbackCommand::class,
         MailCommand::class,
         PlagiarismCommand::class,
+        ChooseFeedbackCommand::class,
+        SaveFeedbackCommand::class,
         InstructionsCommand::class,
         VersionCommand::class
     ]

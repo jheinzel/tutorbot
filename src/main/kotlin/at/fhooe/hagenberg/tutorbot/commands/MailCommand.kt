@@ -16,6 +16,7 @@ import javax.mail.AuthenticationFailedException
 )
 class MailCommand @Inject constructor(
     private val mailClient: MailClient,
+    private val saveFeedbackCommand: SaveFeedbackCommand,
     private val credentialStore: CredentialStore,
     private val configHandler: ConfigHandler
 ) : BaseCommand() {
@@ -70,6 +71,12 @@ class MailCommand @Inject constructor(
                     printlnRed("failed (${exception::class.java.typeName}; ${exception.message})")
                 }
             }
+        }
+
+        // Prompt for feedback saving also
+        if (promptBooleanInput("Do you also want to save the feedbacks count to CSV?"))
+        {
+            saveFeedbackCommand.execute()
         }
     }
 
