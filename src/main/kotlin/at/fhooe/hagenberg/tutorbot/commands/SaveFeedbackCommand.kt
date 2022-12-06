@@ -5,7 +5,6 @@ import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.printlnGreen
-import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.FileNotFoundException
 import java.nio.file.Path
@@ -21,17 +20,15 @@ class SaveFeedbackCommand @Inject constructor(
 ) : BaseCommand() {
     override fun execute() {
         // Current ex. reviews path
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir =
-            configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val baseDir = configHandler.getBaseDir()
+        val exerciseSubDir = configHandler.getExerciseSubDir()
+        val reviewsDir = configHandler.getReviewsSubDir()
         val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
         val feedbackCount = feedbackHelper.readFeedbackCountFromReviews(sourceDirectory.toFile())
         if (feedbackCount.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
 
         // Get CSV with count of previous feedbacks
         val feedbackDirPath = configHandler.getFeedbackCsv()
-            ?: promptTextInput("Enter CSV file with feedback counts (relative or absolute path):")
         val feedbackCsv = Path.of(feedbackDirPath).toFile()
         val existingFeedbackCount = try {
             feedbackHelper.readFeedbackCountFromCsv(feedbackCsv)

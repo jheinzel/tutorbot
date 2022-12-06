@@ -93,9 +93,9 @@ class MailCommand @Inject constructor(
     }
 
     private fun getReviewsDirectory(): File {
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsSubDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val baseDir = configHandler.getBaseDir()
+        val exerciseSubDir = configHandler.getExerciseSubDir()
+        val reviewsSubDir = configHandler.getReviewsSubDir()
 
         val reviewsDirectory = File(Path.of(baseDir, exerciseSubDir, reviewsSubDir).toString())
 

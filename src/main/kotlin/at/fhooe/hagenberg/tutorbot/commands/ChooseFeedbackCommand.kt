@@ -4,7 +4,10 @@ import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
-import at.fhooe.hagenberg.tutorbot.util.*
+import at.fhooe.hagenberg.tutorbot.util.exitWithError
+import at.fhooe.hagenberg.tutorbot.util.printlnCyan
+import at.fhooe.hagenberg.tutorbot.util.printlnGreen
+import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
 import picocli.CommandLine.Command
 import java.io.File
 import java.io.FileNotFoundException
@@ -116,27 +119,21 @@ class ChooseFeedbackCommand @Inject constructor(
 
     override fun execute() {
         // Current ex. reviews path
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir =
-            configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val baseDir = configHandler.getBaseDir()
+        val exerciseSubDir = configHandler.getExerciseSubDir()
+        val reviewsDir = configHandler.getReviewsSubDir()
         val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
         val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
         if (reviews.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
 
         // Get CSV with count of previous feedbacks
         val feedbackDirPath = configHandler.getFeedbackCsv()
-            ?: promptTextInput("Enter CSV file with feedback counts (relative or absolute path):")
         val feedbackCsv = Path.of(feedbackDirPath).toFile()
 
         // Count arguments
-        val feedbackCount =
-            configHandler.getFeedbackAmount()
-                ?: promptNumberInput("Enter amount of reviews to pick:")
+        val feedbackCount = configHandler.getFeedbackAmount()
         if (feedbackCount < 1) exitWithError("Feedback count must at least be 1.")
-        val randomCount =
-            configHandler.getFeedbackRandomAmount()
-                ?: promptNumberInput("Enter amount of random reviews to pick (0 <= amount <= $feedbackCount):")
+        val randomCount = configHandler.getFeedbackRandomAmount()
         if (randomCount < 0 || randomCount > feedbackCount) exitWithError("Random feedback count must be >= 0 and <= feedback count.")
 
         // Pick reviews

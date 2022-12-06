@@ -3,10 +3,13 @@ package at.fhooe.hagenberg.tutorbot.commands
 import at.fhooe.hagenberg.tutorbot.auth.MoodleAuthenticator
 import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.network.MoodleClient
 import at.fhooe.hagenberg.tutorbot.components.PlagiarismChecker
 import at.fhooe.hagenberg.tutorbot.components.Unzipper
-import at.fhooe.hagenberg.tutorbot.util.*
+import at.fhooe.hagenberg.tutorbot.network.MoodleClient
+import at.fhooe.hagenberg.tutorbot.util.href
+import at.fhooe.hagenberg.tutorbot.util.printlnRed
+import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
+import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.File
 import java.net.URI
@@ -76,7 +79,7 @@ class SubmissionsCommand @Inject constructor(
     }
 
     override fun getCommandSubDir(): String {
-        return configHandler.getSubmissionsSubDir() ?: promptTextInput("Enter submissions subdirectory:")
+        return configHandler.getSubmissionsSubDir()
     }
 
     private fun getAllDownloadLinks(assignmentUrl: String): List<String> = try {

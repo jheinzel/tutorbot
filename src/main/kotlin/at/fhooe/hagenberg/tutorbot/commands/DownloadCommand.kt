@@ -3,7 +3,6 @@ package at.fhooe.hagenberg.tutorbot.commands
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
-import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import java.io.File
 import java.nio.file.Path
 
@@ -14,8 +13,8 @@ abstract class DownloadCommand(
     protected abstract fun getCommandSubDir(): String?
 
     protected fun setupTargetDirectory(): File {
-        val baseDir        = configHandler.getBaseDir()        ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
+        val baseDir        = configHandler.getBaseDir()
+        val exerciseSubDir = configHandler.getExerciseSubDir()
         val commandSubDir  = getCommandSubDir()
         val targetDirectory = Path.of(baseDir, exerciseSubDir, commandSubDir).toFile()
 

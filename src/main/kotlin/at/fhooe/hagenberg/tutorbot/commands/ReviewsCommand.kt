@@ -4,7 +4,10 @@ import at.fhooe.hagenberg.tutorbot.auth.MoodleAuthenticator
 import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.network.MoodleClient
-import at.fhooe.hagenberg.tutorbot.util.*
+import at.fhooe.hagenberg.tutorbot.util.exitWithError
+import at.fhooe.hagenberg.tutorbot.util.href
+import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
+import at.fhooe.hagenberg.tutorbot.util.promptTextInput
 import picocli.CommandLine.Command
 import java.io.File
 import javax.inject.Inject
@@ -76,7 +79,7 @@ class ReviewsCommand @Inject constructor(
     }
 
     override fun getCommandSubDir(): String {
-        return configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        return configHandler.getReviewsSubDir()
     }
 
     private fun getAllDetailLinks(assignmentUrl: String): List<String> = try {
