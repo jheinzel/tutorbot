@@ -133,7 +133,7 @@ class MailCommandTest : CommandLineTest() {
     fun `Save feedback is not executed when not confirmed`() {
         systemIn.provideLines("Subject", "Body", "Y", "N")
         mailCommand.execute()
-        
+
         confirmVerified(saveFeedbackCommand)
     }
 

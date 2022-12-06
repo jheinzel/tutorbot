@@ -2,10 +2,15 @@ package at.fhooe.hagenberg.tutorbot.components
 
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
+import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
+import at.fhooe.hagenberg.tutorbot.testutil.getResource
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 
 class FeedbackHelperTest : CommandLineTest() {
     private val lowerCaseStudentNumbers = listOf("s1", "s2", "s3", "s4", "s2210101010")
@@ -17,7 +22,13 @@ class FeedbackHelperTest : CommandLineTest() {
         "s2210101010" to FeedbackCount(0, 1)
     )
 
-    val reviewDir = File(ClassLoader.getSystemResource("pdfs").toString().split("file:/").last())
+    private val validCsv = mapOf(
+        "s1" to FeedbackCount(1, 3),
+        "s2" to FeedbackCount(3, 3),
+        "s4" to FeedbackCount(0, 1)
+    )
+
+    private val reviewDir = File(ClassLoader.getSystemResource("pdfs").toString().split("file:/").last())
 
     private val feedbackHelper = FeedbackHelper()
 
@@ -75,5 +86,61 @@ class FeedbackHelperTest : CommandLineTest() {
         val res = feedbackHelper.readFeedbackCountFromReviews(reviewDir)
 
         assert(studentFeedbackCount.all { s -> res[s.first] == s.second })
+    }
+
+    @Test
+    fun `Read feedback from csv throws exception when file empty`(){
+        val file = fileSystem.directory.resolve("invalid-empty.csv")
+
+        assertThrows<IOException> {
+            feedbackHelper.readFeedbackCountFromCsv(file)
+        }
+    }
+
+    @Test
+    fun `Read feedback from csv throws exception when file does not exist`(){
+        val file = fileSystem.directory.resolve("notexists.csv")
+
+        assertThrows<FileNotFoundException> {
+            feedbackHelper.readFeedbackCountFromCsv(file)
+        }
+    }
+
+    @Test
+    fun `Read feedback from csv throws exception when header not present`(){
+        val file = getResource("csv/invalid-noheader.csv")
+
+        assertThrows<IllegalArgumentException> {
+            feedbackHelper.readFeedbackCountFromCsv(file)
+        }
+    }
+
+    @Test
+    fun `Read feedback from csv throws exception when count not int`(){
+        val file = getResource("csv/invalid-count.csv")
+
+        assertThrows<NumberFormatException> {
+            feedbackHelper.readFeedbackCountFromCsv(file)
+        }
+    }
+
+    @Test
+    fun `Read feedback from valid csv returns same values`(){
+        val file = getResource("csv/valid.csv")
+        val res = feedbackHelper.readFeedbackCountFromCsv(file)
+
+        assertEquals(validCsv, res)
+    }
+
+    @Test
+    fun `Read write read feedback returns same values`(){
+        val file = getResource("csv/valid.csv")
+        val newFile = fileSystem.directory.resolve("newfile.csv")
+
+        val expected = feedbackHelper.readFeedbackCountFromCsv(file)
+        feedbackHelper.writeFeedbackCountToCsv(newFile, expected)
+        val res = feedbackHelper.readFeedbackCountFromCsv(newFile)
+
+        assertEquals(expected, res)
     }
 }

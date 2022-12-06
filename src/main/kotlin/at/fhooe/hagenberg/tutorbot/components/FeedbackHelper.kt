@@ -60,7 +60,7 @@ class FeedbackHelper @Inject constructor() {
      */
     fun readFeedbackCountFromCsv(csvFile: File): Map<String, FeedbackCount> {
         csvFile.bufferedReader().use {
-            it.readLine() // ignore header
+            if (it.readLine() != CSV_HEADER) throw IllegalArgumentException("Invalid CSV file, header '$CSV_HEADER' missing.")
             return it.lineSequence()
                 .filter { line -> line.isNotBlank() }
                 .map { line ->
@@ -76,7 +76,7 @@ class FeedbackHelper @Inject constructor() {
      */
     fun writeFeedbackCountToCsv(csvFile: File, feedbackCount: Map<String, FeedbackCount>) {
         csvFile.bufferedWriter().use {
-            it.write("student,submissions,reviews")
+            it.write(CSV_HEADER)
             it.newLine()
             feedbackCount.forEach { (s, f) ->
                 it.write("${s.toLowerCase()},${f.submission},${f.review}")
@@ -87,5 +87,6 @@ class FeedbackHelper @Inject constructor() {
 
     companion object {
         const val STUDENT_NR_PATTERN = "[sS][0-9]+"
+        const val CSV_HEADER = "student,submissions,reviews"
     }
 }
