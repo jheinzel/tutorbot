@@ -40,6 +40,11 @@ interface CommandsModule {
 
     @Binds
     @IntoMap
+    @CommandKey(SaveFeedbackCommand::class)
+    fun bindSaveFeedbackCommand(command: SaveFeedbackCommand): BaseCommand
+
+    @Binds
+    @IntoMap
     @CommandKey(SubmissionsCommand::class)
     fun bindSubmissionsCommand(command: SubmissionsCommand): BaseCommand
 

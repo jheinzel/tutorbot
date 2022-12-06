@@ -12,6 +12,7 @@ import kotlin.system.exitProcess
         SubmissionsCommand::class,
         ReviewsCommand::class,
         ChooseFeedbackCommand::class,
+        SaveFeedbackCommand::class,
         MailCommand::class,
         PlagiarismCommand::class,
         InstructionsCommand::class,
