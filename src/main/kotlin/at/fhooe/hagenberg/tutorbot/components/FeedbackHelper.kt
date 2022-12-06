@@ -37,7 +37,7 @@ class FeedbackHelper @Inject constructor() {
     }
 
     /**
-     * Gathers the amount of feedbacks the students have received. Student number keys normalized to lower case.
+     * Gathers the amount of feedbacks the students have received from a directory. Student number keys normalized to lower case.
      */
     fun readFeedbackCountFromReviews(feedbackDir: File): Map<String, FeedbackCount> {
         val reviews = readAllReviewsFromDir(feedbackDir)

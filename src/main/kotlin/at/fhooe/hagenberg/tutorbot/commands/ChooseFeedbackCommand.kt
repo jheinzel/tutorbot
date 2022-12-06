@@ -2,10 +2,12 @@ package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
+import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
 import at.fhooe.hagenberg.tutorbot.util.*
 import picocli.CommandLine.Command
 import java.io.File
+import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -52,11 +54,17 @@ class ChooseFeedbackCommand @Inject constructor(
      */
     private fun pickReviewsToFeedback(
         reviews: MutableSet<Review>,
-        feedbackDir: File,
+        feedbackCsv: File,
         feedbackCount: Int,
         randomCount: Int
     ): Set<Review> {
-        val feedbackCountMap = feedbackHelper.readFeedbackCountFromReviews(feedbackDir)
+        val feedbackCountMap = try {
+            feedbackHelper.readFeedbackCountFromCsv(feedbackCsv)
+        } catch (e: FileNotFoundException) {
+            mapOf<String, FeedbackCount>() // If file does not exist, just return empty map
+        } catch (e: Exception) {
+            exitWithError(e.message ?: "Parsing feedback CSV failed.")
+        }
         val chosenReviews = mutableSetOf<Review>()
         val canStillPickReviews = { reviews.isNotEmpty() && chosenReviews.size < feedbackCount }
 
@@ -115,11 +123,11 @@ class ChooseFeedbackCommand @Inject constructor(
         val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
         val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
         if (reviews.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
-        // Get folder of previous feedbacks
-        val feedbackDirPath = configHandler.getFeedbackDir()
-            ?: promptTextInput("Enter directory with previous feedbacks (relative or absolute path):")
-        val feedbackDir = Path.of(feedbackDirPath).toFile()
-        if (!feedbackDir.isDirectory) exitWithError("Location $feedbackDir does not point to a valid directory.")
+
+        // Get CSV with count of previous feedbacks
+        val feedbackDirPath = configHandler.getFeedbackCsv()
+            ?: promptTextInput("Enter CSV file with feedback counts (relative or absolute path):")
+        val feedbackCsv = Path.of(feedbackDirPath).toFile()
 
         // Count arguments
         val feedbackCount =
@@ -133,11 +141,11 @@ class ChooseFeedbackCommand @Inject constructor(
 
         // Pick reviews
         val reviewsToFeedback =
-            pickReviewsToFeedback(reviews.toMutableSet(), feedbackDir, feedbackCount, randomCount)
+            pickReviewsToFeedback(reviews.toMutableSet(), feedbackCsv, feedbackCount, randomCount)
         val reviewsToMove = reviews - reviewsToFeedback
 
         if (reviewsToFeedback.size != feedbackCount)
-            printlnCyan("Could only pick ${reviewsToFeedback.size}/$feedbackCount reviews to avoid overlapping.")
+            printlnCyan("Could only pick ${reviewsToFeedback.size}/$feedbackCount reviews.")
         else
             printlnGreen("Picked $feedbackCount reviews.")
 
@@ -156,9 +164,8 @@ class ChooseFeedbackCommand @Inject constructor(
                     targetDirectory.resolve(rev.fileName),
                     StandardCopyOption.REPLACE_EXISTING
                 )
-
             } catch (ex: Exception) {
-                exitWithError(ex.message ?: "Moving files failed with $rev.")
+                exitWithError(ex.message ?: "Moving ${rev.fileName} failed.")
             }
         }
 
