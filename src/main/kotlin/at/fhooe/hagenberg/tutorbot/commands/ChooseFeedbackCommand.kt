@@ -169,7 +169,7 @@ class ChooseFeedbackCommand @Inject constructor(
         printlnGreen("Finished selecting reviews.")
     }
 
-    private companion object {
+    companion object {
         const val NOT_SELECTED_DIR = "not-selected"
     }
 }
