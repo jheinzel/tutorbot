@@ -8,23 +8,26 @@ import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.getResource
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.nio.file.Path
 import kotlin.random.Random
 
 class ChooseFeedbackCommandTest : CommandLineTest() {
-    private val reviewLoc = "reviews"
-    private val exerciseLoc = "ue01"
+    private val reviewSubDir = "reviews"
+    private val exerciseSubDir = "ue01"
 
     private val configHandler = mockk<ConfigHandler> {
-        every { getExerciseSubDir() } returns exerciseLoc
-        every { getReviewsSubDir() } returns reviewLoc
+        every { getExerciseSubDir() } returns exerciseSubDir
+        every { getReviewsSubDir() } returns reviewSubDir
     }
     private val feedbackHelper = mockk<FeedbackHelper> {
 
@@ -40,6 +43,14 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     private var reviewLocation: String? = null
 
+    @Before
+    fun setup() {
+        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath.toString()
+        reviewLocation =
+            Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
+                .toString()
+    }
+
     private fun verifyExpectedFiles(fileNames: List<String>) {
         val filesInFolder = File(reviewLocation!!).listFiles()!!.map { it.name }
         assert(fileNames.all { f -> f in filesInFolder })
@@ -50,12 +61,19 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         assert(fileNames.all { f -> f in filesInFolder })
     }
 
-    @Before
-    fun setup() {
-        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath.toString()
-        reviewLocation =
-            Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
-                .toString()
+    private fun setupTestFiles() {
+        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+                setOf(
+                    Review("S3-S4_S3-S4.pdf", "s3", "s4"),
+                    Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
+                )
+        getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
+        getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(
+            File(
+                reviewLocation,
+                "S4-S2210101010_S4_TestName.pdf"
+            )
+        )
     }
 
     @Test
@@ -106,10 +124,12 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `With no feedback csv, the only review is chosen`() {
         every { feedbackHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
-        File(ClassLoader.getSystemResource("pdfs/S1-S2_S1-S2.pdf").toURI()).copyTo(File(reviewLocation, "S1-S2_S1-S2.pdf"))
+        File(ClassLoader.getSystemResource("pdfs/S1-S2_S1-S2.pdf").toURI()).copyTo(
+            File(reviewLocation, "S1-S2_S1-S2.pdf")
+        )
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws FileNotFoundException()
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
-        every {feedbackHelper.readFeedbackCountFromCsv(any())} throws FileNotFoundException()
 
         chooseFeedbackCmd.execute()
 
@@ -117,22 +137,126 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Same students cannot be selected for two reviews, prefer those with less feedbacks`() {
+    fun `Exits when read feedback count throws IOException`() {
         every { feedbackHelper.readAllReviewsFromDir(any()) } returns
-                setOf(
-                    Review("S3-S4_S3-S4.pdf", "s3", "s4"),
-                    Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
-                )
-        getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
-        getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(File(reviewLocation, "S4-S2210101010_S4_TestName.pdf"))
-        // S4 has more feedbacks, prefer S3
-        every {feedbackHelper.readFeedbackCountFromCsv(any())} returns mapOf("s4" to FeedbackHelper.FeedbackCount(1, 0))
+                setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws IOException()
+        every { configHandler.getFeedbackAmount() } returns 1
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+
+        assertThrows<ProgramExitError> {
+            chooseFeedbackCmd.execute()
+        }
+    }
+
+    @Test
+    fun `Same student cannot be selected for two reviews, prefer student with no feedbacks`() {
+        setupTestFiles()
+        // S4 has feedback, S3 does not, prefer S3
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s4" to FeedbackHelper.FeedbackCount(
+                1,
+                0
+            )
+        )
         every { configHandler.getFeedbackAmount() } returns 2
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
         chooseFeedbackCmd.execute()
 
         verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
+        verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+    }
+
+    @Test
+    fun `Same student cannot be selected for two reviews, prefer student with less feedbacks`() {
+        // S4 has more reviews, so S3 is picked
+        setupTestFiles()
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(1, 1),
+            "s4" to FeedbackHelper.FeedbackCount(2, 1)
+        )
+        every { configHandler.getFeedbackAmount() } returns 2
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+
+        chooseFeedbackCmd.execute()
+
+        verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
+        verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+    }
+
+    @Test
+    fun `Random student is selected with same feedback count`() {
+        // Both have same amount of reviews, S4 is picked randomly
+        setupTestFiles()
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(1, 1),
+            "s4" to FeedbackHelper.FeedbackCount(1, 1)
+        )
+        every { random.nextInt(any()) } returns 1 // Take second item which is submission of s4
+        every { configHandler.getFeedbackAmount() } returns 1
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+
+        chooseFeedbackCmd.execute()
+
+        verify(exactly = 1) { random.nextInt(any()) }
+        confirmVerified(random)
+        verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+        verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
+    }
+
+    @Test
+    fun `Random student is selected regardless of feedback count`() {
+        // S4 has more reviews, but is picked because of randomCount
+        setupTestFiles()
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(1, 1),
+            "s4" to FeedbackHelper.FeedbackCount(2, 1)
+        )
+        every { random.nextInt(any()) } returns 1 // Take second item which is submission of s4
+        every { configHandler.getFeedbackAmount() } returns 1
+        every { configHandler.getFeedbackRandomAmount() } returns 1
+
+        chooseFeedbackCmd.execute()
+
+        verify(exactly = 1) { random.nextInt(any()) }
+        confirmVerified(random)
+        verifyExpectedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+        verifyMovedFiles(listOf("S3-S4_S3-S4.pdf"))
+    }
+
+    @Test
+    fun `Student with less reviews than submissions gets selected as reviewer`() {
+        // S4 has not gotten any feedbacks on reviews, choose where S4 is reviewer
+        setupTestFiles()
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(1, 1),
+            "s4" to FeedbackHelper.FeedbackCount(1, 0)
+        )
+        every { configHandler.getFeedbackAmount() } returns 1
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+
+        chooseFeedbackCmd.execute()
+
+        verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
+        verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+    }
+
+    @Test
+    fun `When output folder already exists confirm to overwrite`() {
+        val what = Path.of(reviewLocation, ChooseFeedbackCommand.NOT_SELECTED_DIR).toFile()
+        what.mkdir()
+        setupTestFiles()
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(0, 1),
+            "s4" to FeedbackHelper.FeedbackCount(1, 0)
+        )
+        every { configHandler.getFeedbackAmount() } returns 1
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+        systemIn.provideLines("y")
+
+        chooseFeedbackCmd.execute()
+
         verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
     }
 }

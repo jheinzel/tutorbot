@@ -73,7 +73,7 @@ class ChooseFeedbackCommand @Inject constructor(
 
         // 1) Chose random reviews first
         while (canStillPickReviews() && chosenReviews.size < randomCount) {
-            val review = reviews.random().also { reviews.remove(it) }
+            val review = reviews.random(random).also { reviews.remove(it) }
             addIfAllowed(review, chosenReviews)
         }
 
@@ -166,7 +166,7 @@ class ChooseFeedbackCommand @Inject constructor(
             }
         }
 
-        printlnGreen("Finished selecting reviews.")
+        printlnGreen("Finished selecting reviews to feedback.")
     }
 
     companion object {
