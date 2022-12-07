@@ -28,7 +28,7 @@ class FeedbackHelperTest : CommandLineTest() {
         "s4" to FeedbackCount(0, 1)
     )
 
-    private val reviewDir = File(ClassLoader.getSystemResource("pdfs").toString().split("file:/").last())
+    private val reviewDir = getResource("pdfs")
 
     private val feedbackHelper = FeedbackHelper()
 

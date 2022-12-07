@@ -18,7 +18,6 @@ import org.junit.Test
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.nio.file.Path
 import kotlin.random.Random
 
 class ChooseFeedbackCommandTest : CommandLineTest() {
@@ -45,10 +44,9 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Before
     fun setup() {
-        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath.toString()
+        every { configHandler.getBaseDir() } returns fileSystem.directory.absolutePath
         reviewLocation =
-            Path.of(configHandler.getBaseDir(), configHandler.getExerciseSubDir(), configHandler.getReviewsSubDir())
-                .toString()
+            fileSystem.directory.resolve(exerciseSubDir).resolve(reviewSubDir).toString()
     }
 
     private fun verifyExpectedFiles(fileNames: List<String>) {
@@ -239,24 +237,6 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         chooseFeedbackCmd.execute()
 
         verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
-        verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
-    }
-
-    @Test
-    fun `When output folder already exists confirm to overwrite`() {
-        val what = Path.of(reviewLocation, ChooseFeedbackCommand.NOT_SELECTED_DIR).toFile()
-        what.mkdir()
-        setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
-            "s3" to FeedbackHelper.FeedbackCount(0, 1),
-            "s4" to FeedbackHelper.FeedbackCount(1, 0)
-        )
-        every { configHandler.getFeedbackAmount() } returns 1
-        every { configHandler.getFeedbackRandomAmount() } returns 0
-        systemIn.provideLines("y")
-
-        chooseFeedbackCmd.execute()
-
         verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
     }
 }
