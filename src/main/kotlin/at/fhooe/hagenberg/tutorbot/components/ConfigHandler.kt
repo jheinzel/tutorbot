@@ -29,6 +29,7 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
     fun getMoodleUrl(): String = getProperty("moodle.url") ?: "https://elearning.fh-ooe.at/"
     fun getMoodleAuthMethod(): AuthMethod =
         if (getProperty("moodle.auth.method")?.toLowerCase() == "cookie") AuthMethod.COOKIE else AuthMethod.USER_PASS
+    fun getMoodleCookieName(): String = getProperty("moodle.cookie.name") ?: "MoodleSessionlmsfhooe"
 
     fun getEmailAddress(): String? = getProperty("email.address")
     fun getEmailUsername(): String? = getProperty("email.username")

@@ -25,6 +25,7 @@ class ConfigHandlerTest : CommandLineTest() {
         assertEquals("config-email-address", configHandler.getEmailAddress())
         assertEquals("config-email-username", configHandler.getEmailUsername())
         assertEquals("config-email-password", configHandler.getEmailPassword())
+        assertEquals("config-cookie-name", configHandler.getMoodleCookieName())
         assertEquals("config-email-suffix", configHandler.getStudentsEmailSuffix())
         assertEquals("config-email-subject", configHandler.getEmailSubjectTemplate())
         assertEquals("config-email-body", configHandler.getEmailBodyTemplate())
