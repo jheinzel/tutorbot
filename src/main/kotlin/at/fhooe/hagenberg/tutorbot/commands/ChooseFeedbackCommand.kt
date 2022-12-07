@@ -17,7 +17,6 @@ import java.nio.file.StandardCopyOption
 import javax.inject.Inject
 import kotlin.random.Random
 
-
 @Command(
     name = "choose-feedback",
     description = ["Choose reviews to give feedback on. Students who have gotten less feedbacks on submissions or reviews have a greater chance of being picked."]
