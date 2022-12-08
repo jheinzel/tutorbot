@@ -23,12 +23,10 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     private val reviewSubDir = "reviews"
     private val exerciseSubDir = "ue01"
 
+    private val feedbackHelper = mockk<FeedbackHelper> ()
     private val configHandler = mockk<ConfigHandler> {
         every { getExerciseSubDir() } returns exerciseSubDir
         every { getReviewsSubDir() } returns reviewSubDir
-    }
-    private val feedbackHelper = mockk<FeedbackHelper> {
-
     }
     private val random = mockk<Random> {
         every { nextInt(any()) } returns 0
