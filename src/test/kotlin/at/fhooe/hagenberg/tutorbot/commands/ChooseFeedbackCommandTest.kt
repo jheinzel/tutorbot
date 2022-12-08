@@ -58,10 +58,18 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     private fun setupTestFiles() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf(Review("S3-S4_S3-S4.pdf", "s3", "s4"), Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010"))
+        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf(
+            Review("S3-S4_S3-S4.pdf", "s3", "s4"),
+            Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
+        )
 
         getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
-        getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(File(reviewLocation, "S4-S2210101010_S4_TestName.pdf"))
+        getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(
+            File(
+                reviewLocation,
+                "S4-S2210101010_S4_TestName.pdf"
+            )
+        )
     }
 
     @Test
@@ -200,12 +208,16 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         verifyExpectedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
         verifyMovedFiles(listOf("S3-S4_S3-S4.pdf"))
     }
+     */
 
     @Test
     fun `Student with fewer reviews than submissions gets selected as reviewer`() {
         // S4 has not gotten any feedbacks on reviews, choose where S4 is reviewer
         setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(1, 0))
+        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackHelper.FeedbackCount(1, 1),
+            "s4" to FeedbackHelper.FeedbackCount(1, 0)
+        )
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
@@ -214,5 +226,4 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
         verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
     }
-     */
 }
