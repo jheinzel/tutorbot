@@ -2,6 +2,7 @@ package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
+import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
 import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
@@ -65,10 +66,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
         getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
         getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(
-            File(
-                reviewLocation,
-                "S4-S2210101010_S4_TestName.pdf"
-            )
+            File(reviewLocation, "S4-S2210101010_S4_TestName.pdf")
         )
     }
 
@@ -215,8 +213,8 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         // S4 has not gotten any feedbacks on reviews, choose where S4 is reviewer
         setupTestFiles()
         every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
-            "s3" to FeedbackHelper.FeedbackCount(1, 1),
-            "s4" to FeedbackHelper.FeedbackCount(1, 0)
+            "s3" to FeedbackCount(1, 1),
+            "s4" to FeedbackCount(1, 0)
         )
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
