@@ -1,5 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
+import at.fhooe.hagenberg.tutorbot.commands.ChooseFeedbackCommand
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
