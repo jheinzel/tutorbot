@@ -30,4 +30,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-caches-
       - name: Test
-        run: ./gradlew test --debug --stacktrace
+        run: ./gradlew test --stacktrace

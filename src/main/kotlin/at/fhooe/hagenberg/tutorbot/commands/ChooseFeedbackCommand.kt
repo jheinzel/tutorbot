@@ -1,6 +1,5 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
-import at.fhooe.hagenberg.tutorbot.commands.ChooseFeedbackCommand
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
 import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
@@ -12,9 +11,7 @@ import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
 import picocli.CommandLine.Command
 import java.io.File
 import java.io.FileNotFoundException
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -156,11 +153,10 @@ class ChooseFeedbackCommand @Inject constructor(
         // Move reviews not selected for feedback in subfolder
         for (rev in reviewsToMove) {
             try {
-                Files.move(
-                    sourceDirectory.resolve(rev.fileName),
-                    targetDirectory.resolve(rev.fileName),
-                    StandardCopyOption.REPLACE_EXISTING
-                )
+                sourceDirectory.resolve(rev.fileName).toFile().run {
+                    copyTo(targetDirectory.resolve(rev.fileName).toFile(), true)
+                    delete()
+                }
             } catch (ex: Exception) {
                 exitWithError(ex.message ?: "Moving ${rev.fileName} failed.")
             }

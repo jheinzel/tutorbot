@@ -9,8 +9,10 @@ import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.getResource
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -141,7 +143,6 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         }
     }
 
-    /*
     @Test
     fun `Same student cannot be selected for two reviews, prefer student with no feedbacks`() {
        setupTestFiles()
@@ -204,7 +205,6 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
         verifyExpectedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
         verifyMovedFiles(listOf("S3-S4_S3-S4.pdf"))
     }
-     */
 
     @Test
     fun `Student with fewer reviews than submissions gets selected as reviewer`() {
