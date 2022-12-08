@@ -19,6 +19,8 @@ Tutorbot comes with a range of different features, it can support you by:
 * checking submissions for plagiarism
 * downloading all reviews for a certain exercise
 * sending feedback emails to students
+* choosing reviews to give feedback to
+* saving amount of feedbacks each student has received
 
 ## Configuration
 

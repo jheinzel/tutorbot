@@ -154,7 +154,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Same student cannot be selected for two reviews, prefer student with less feedbacks`() {
+    fun `Same student cannot be selected for two reviews, prefer student with fewer feedbacks`() {
         // S4 has more reviews, so S3 is picked
         setupTestFiles()
         every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(2, 1))
@@ -202,7 +202,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Student with less reviews than submissions gets selected as reviewer`() {
+    fun `Student with fewer reviews than submissions gets selected as reviewer`() {
         // S4 has not gotten any feedbacks on reviews, choose where S4 is reviewer
         setupTestFiles()
         every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(1, 0))
