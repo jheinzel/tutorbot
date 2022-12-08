@@ -60,17 +60,14 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     private fun setupTestFiles() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
-                setOf(
-                    Review("S3-S4_S3-S4.pdf", "s3", "s4"),
-                    Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
-                )
+        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf(
+            Review("S3-S4_S3-S4.pdf", "s3", "s4"),
+            Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
+        )
+
         getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
         getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(
-            File(
-                reviewLocation,
-                "S4-S2210101010_S4_TestName.pdf"
-            )
+            File(reviewLocation, "S4-S2210101010_S4_TestName.pdf")
         )
     }
 
@@ -122,7 +119,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `With no feedback csv, the only review is chosen`() {
         every { feedbackHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
-        File(ClassLoader.getSystemResource("pdfs/S1-S2_S1-S2.pdf").toURI()).copyTo(
+        getResource("pdfs/S1-S2_S1-S2.pdf").copyTo(
             File(reviewLocation, "S1-S2_S1-S2.pdf")
         )
         every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws FileNotFoundException()
@@ -149,13 +146,19 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Same student cannot be selected for two reviews, prefer student with no feedbacks`() {
-        setupTestFiles()
+        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf(
+            Review("S3-S4_S3-S4.pdf", "s3", "s4"),
+            Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
+        )
+
+        getResource("pdfs/S3-S4_S3-S4.pdf").copyTo(File(reviewLocation, "S3-S4_S3-S4.pdf"))
+        getResource("pdfs/S4-S2210101010_S4_TestName.pdf").copyTo(
+            File(reviewLocation, "S4-S2210101010_S4_TestName.pdf")
+        )
+
         // S4 has feedback, S3 does not, prefer S3
         every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
-            "s4" to FeedbackHelper.FeedbackCount(
-                1,
-                0
-            )
+            "s4" to FeedbackHelper.FeedbackCount(1, 0)
         )
         every { configHandler.getFeedbackAmount() } returns 2
         every { configHandler.getFeedbackRandomAmount() } returns 0
