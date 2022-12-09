@@ -77,7 +77,7 @@ class MoodleAuthenticator @Inject constructor(
         return Cookie.Builder()
             .hostOnlyDomain(domain)
             .path("/")
-            .name(CredentialStore.COOKIE_AUTH_NAME)
+            .name(configHandler.getMoodleCookieName())
             .value(value)
             .secure()
             .build()

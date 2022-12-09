@@ -1,5 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.components
 
+import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -7,7 +8,7 @@ import org.junit.Test
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import java.io.File
 
-class ConfigHandlerTest {
+class ConfigHandlerTest : CommandLineTest() {
 
     @get:Rule
     val envVars = EnvironmentVariables()
@@ -24,6 +25,7 @@ class ConfigHandlerTest {
         assertEquals("config-email-address", configHandler.getEmailAddress())
         assertEquals("config-email-username", configHandler.getEmailUsername())
         assertEquals("config-email-password", configHandler.getEmailPassword())
+        assertEquals("config-cookie-name", configHandler.getMoodleCookieName())
         assertEquals("config-email-suffix", configHandler.getStudentsEmailSuffix())
         assertEquals("config-email-subject", configHandler.getEmailSubjectTemplate())
         assertEquals("config-email-body", configHandler.getEmailBodyTemplate())
@@ -31,6 +33,9 @@ class ConfigHandlerTest {
         assertEquals("config-submissions", configHandler.getSubmissionsSubDir())
         assertEquals("config-reviews", configHandler.getReviewsSubDir())
         assertEquals("config-exercise", configHandler.getExerciseSubDir())
+        assertEquals(10, configHandler.getFeedbackAmount())
+        assertEquals(3, configHandler.getFeedbackRandomAmount())
+        assertEquals("config-feedback-csv", configHandler.getFeedbackCsv())
         assertEquals("config-plagiarism-language-java-version", configHandler.getJavaLanguageLevel())
     }
 
@@ -61,10 +66,12 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/missing.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        // Present property is found successfully, others should be null
+        // Present property is found successfully, others should be null or have their default value
         assertEquals("config-username", configHandler.getMoodleUsername())
-        assertNull(configHandler.getBaseDir())
-        assertNull(configHandler.getJavaLanguageLevel())
+        assertNull(configHandler.getMoodlePassword())
+        assertNull(configHandler.getEmailUsername())
+        assert(configHandler.getJavaLanguageLevel().isNotBlank())
+        assert(configHandler.getMoodleUrl().isNotBlank())
     }
 
     @Test
@@ -80,9 +87,44 @@ class ConfigHandlerTest {
         val config = File(ClassLoader.getSystemResource("config/corrupt.properties").toURI())
         val configHandler = ConfigHandler(config)
 
-        assertNull(configHandler.getMoodleUsername())
-//        assertNull(configHandler.getSubmissionsDownloadLocation())
-//        assertNull(configHandler.getReviewsDownloadLocation())
-        assertNull(configHandler.getJavaLanguageLevel())
+        assertNull(configHandler.getMoodleUsername()) // Still works, throws no ex.
+    }
+
+    @Test
+    fun `Prompted are read from console if not provided otherwise`() {
+        val config = File(ClassLoader.getSystemResource("config/missing.properties").toURI())
+        val configHandler = ConfigHandler(config)
+
+        systemIn.provideLines("base-dir", "ex-dir", "sub-dir", "rev-dir", "3", "1", "fed-csv")
+        assertEquals("base-dir", configHandler.getBaseDir())
+        assertEquals("ex-dir", configHandler.getExerciseSubDir())
+        assertEquals("sub-dir", configHandler.getSubmissionsSubDir())
+        assertEquals("rev-dir", configHandler.getReviewsSubDir())
+        assertEquals(3, configHandler.getFeedbackAmount())
+        assertEquals(1, configHandler.getFeedbackRandomAmount())
+        assertEquals("fed-csv", configHandler.getFeedbackCsv())
+    }
+
+    @Test
+    fun `Prompted properties save value after prompted once`() {
+        val config = File(ClassLoader.getSystemResource("config/missing.properties").toURI())
+        val configHandler = ConfigHandler(config)
+
+        systemIn.provideLines("base-dir", "ex-dir", "sub-dir", "rev-dir", "3", "1", "fed-csv")
+        configHandler.getBaseDir()
+        configHandler.getExerciseSubDir()
+        configHandler.getSubmissionsSubDir()
+        configHandler.getReviewsSubDir()
+        configHandler.getFeedbackAmount()
+        configHandler.getFeedbackRandomAmount()
+        configHandler.getFeedbackCsv()
+
+        assertEquals("base-dir", configHandler.getBaseDir())
+        assertEquals("ex-dir", configHandler.getExerciseSubDir())
+        assertEquals("sub-dir", configHandler.getSubmissionsSubDir())
+        assertEquals("rev-dir", configHandler.getReviewsSubDir())
+        assertEquals(3, configHandler.getFeedbackAmount())
+        assertEquals(1, configHandler.getFeedbackRandomAmount())
+        assertEquals("fed-csv", configHandler.getFeedbackCsv())
     }
 }

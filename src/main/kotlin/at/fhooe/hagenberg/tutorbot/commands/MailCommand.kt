@@ -16,6 +16,7 @@ import javax.mail.AuthenticationFailedException
 )
 class MailCommand @Inject constructor(
     private val mailClient: MailClient,
+    private val saveFeedbackCommand: SaveFeedbackCommand,
     private val credentialStore: CredentialStore,
     private val configHandler: ConfigHandler
 ) : BaseCommand() {
@@ -71,6 +72,12 @@ class MailCommand @Inject constructor(
                 }
             }
         }
+
+        // Prompt for feedback saving also
+        if (promptBooleanInput("Do you also want to save the feedbacks count to CSV?"))
+        {
+            saveFeedbackCommand.execute()
+        }
     }
 
     private fun String.promptTemplateArguments(name: String): String {
@@ -93,9 +100,9 @@ class MailCommand @Inject constructor(
     }
 
     private fun getReviewsDirectory(): File {
-        val baseDir = configHandler.getBaseDir() ?: promptTextInput("Enter base directory:")
-        val exerciseSubDir = configHandler.getExerciseSubDir() ?: promptTextInput("Enter exercise subdirectory:")
-        val reviewsSubDir = configHandler.getReviewsSubDir() ?: promptTextInput("Enter reviews subdirectory:")
+        val baseDir = configHandler.getBaseDir()
+        val exerciseSubDir = configHandler.getExerciseSubDir()
+        val reviewsSubDir = configHandler.getReviewsSubDir()
 
         val reviewsDirectory = File(Path.of(baseDir, exerciseSubDir, reviewsSubDir).toString())
 

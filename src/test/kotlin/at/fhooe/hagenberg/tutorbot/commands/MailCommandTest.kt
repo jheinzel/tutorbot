@@ -19,6 +19,8 @@ import javax.mail.AuthenticationFailedException
 class MailCommandTest : CommandLineTest() {
     private val mailClient = mockk<MailClient>()
 
+    private val saveFeedbackCommand = mockk<SaveFeedbackCommand>()
+
     private val credentialStore = mockk<CredentialStore> {
         every { getEmailAddress() } returns "S0@example.org"
         every { getEmailUsername() } returns "S0"
@@ -31,7 +33,7 @@ class MailCommandTest : CommandLineTest() {
         every { getReviewsSubDir() } returns "reviews"
     }
 
-    private val mailCommand = MailCommand(mailClient, credentialStore, configHandler)
+    private val mailCommand = MailCommand(mailClient, saveFeedbackCommand, credentialStore, configHandler)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -118,6 +120,23 @@ class MailCommandTest : CommandLineTest() {
         assertThrows<ProgramExitError> { mailCommand.execute() }
     }
 
+    @Test
+    fun `Save feedback is executed when confirmed`() {
+        systemIn.provideLines("Subject", "Body", "Y", "Y")
+        mailCommand.execute()
+
+        verify { saveFeedbackCommand.execute() }
+        confirmVerified(saveFeedbackCommand)
+    }
+
+    @Test
+    fun `Save feedback is not executed when not confirmed`() {
+        systemIn.provideLines("Subject", "Body", "Y", "N")
+        mailCommand.execute()
+
+        confirmVerified(saveFeedbackCommand)
+    }
+
     private fun verifyTestMail(){
         verify { mailClient.sendMail(any()) }
     }
@@ -125,7 +144,7 @@ class MailCommandTest : CommandLineTest() {
     private fun verifySentMails(expectedSubject: String = "Subject", expectedBody: String = "Body") {
         verifyTestMail()
 
-        val emailSuffix = configHandler.getStudentsEmailSuffix();
+        val emailSuffix = configHandler.getStudentsEmailSuffix()
         val mail = MailClient.Mail("S0@$emailSuffix", listOf("S0@$emailSuffix"), expectedSubject, expectedBody, fileSystem.file)
 
         val firstMail = mail.copy(

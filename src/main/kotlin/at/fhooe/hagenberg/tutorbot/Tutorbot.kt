@@ -13,6 +13,8 @@ import kotlin.system.exitProcess
         ReviewsCommand::class,
         MailCommand::class,
         PlagiarismCommand::class,
+        ChooseFeedbackCommand::class,
+        SaveFeedbackCommand::class,
         InstructionsCommand::class,
         VersionCommand::class
     ]

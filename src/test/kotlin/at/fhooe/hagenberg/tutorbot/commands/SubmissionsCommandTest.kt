@@ -1,6 +1,5 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
-import at.fhooe.hagenberg.tutorbot.auth.CredentialStore
 import at.fhooe.hagenberg.tutorbot.auth.MoodleAuthenticator
 import at.fhooe.hagenberg.tutorbot.components.BatchProcessor
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
@@ -8,14 +7,11 @@ import at.fhooe.hagenberg.tutorbot.components.PlagiarismChecker
 import at.fhooe.hagenberg.tutorbot.components.Unzipper
 import at.fhooe.hagenberg.tutorbot.network.MoodleClient
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
-import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.getHtmlResource
 import at.fhooe.hagenberg.tutorbot.testutil.getResource
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
-import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
 import io.mockk.*
-import okhttp3.OkHttpClient
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -63,27 +59,8 @@ class SubmissionsCommandTest : CommandLineTest() {
     }
 
     @Test
-    fun `Submissions are downloaded correctly with properties`() {
+    fun `Submissions are downloaded correctly`() {
         systemIn.provideLines("www.assignment.com", "Y", "Y", "Y")
-
-        submissionsCommand.execute()
-        verifySubmissions()
-    }
-
-    @Test
-    fun `Submissions directories are read from console`() {
-        every { configHandler.getBaseDir() } returns null
-        every { configHandler.getExerciseSubDir() } returns null
-        every { configHandler.getSubmissionsSubDir() } returns null
-        systemIn.provideLines(
-            fileSystem.directory.absolutePath,
-            exerciseLoc,
-            submissionsLoc,
-            "www.assignment.com",
-            "Y",
-            "Y",
-            "Y"
-        )
 
         submissionsCommand.execute()
         verifySubmissions()
@@ -114,7 +91,7 @@ class SubmissionsCommandTest : CommandLineTest() {
     }
 
     private fun verifySubmissions(archiveExists: Boolean = false, submissionExists: Boolean = false) {
-        val submissionsLoc = Path.of(fileSystem.directory.absolutePath, exerciseLoc, submissionsLoc).toString();
+        val submissionsLoc = Path.of(fileSystem.directory.absolutePath, exerciseLoc, submissionsLoc).toString()
         verify { plagiarismChecker.generatePlagiarismReport(File(submissionsLoc)) }
         assertEquals(archiveExists, File(submissionsLoc, "submission.zip").exists())
         assertEquals(submissionExists, File(submissionsLoc, "submission/submission.pdf").exists())

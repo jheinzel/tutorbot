@@ -28,7 +28,7 @@ class PlagiarismChecker @Inject constructor(
     private fun detectSubmissionLanguage(submissionDirectory: File): String {
         val extensions = submissionDirectory.walkTopDown().filter(File::isFile).map { file -> file.extension }
         return when {
-            extensions.contains("java") -> configHandler.getJavaLanguageLevel() ?: "java19"
+            extensions.contains("java") -> configHandler.getJavaLanguageLevel()
             extensions.contains("cpp") || extensions.contains("h") || extensions.contains("c") -> "c/c++"
             else -> exitWithError("Could not detect programming language for plagiarism detection")
         }
