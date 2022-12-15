@@ -134,3 +134,12 @@ Tutorbot is built using Gradle. You don't need to install anything, as the Gradl
 To build the project, simply execute `./gradlew jar`, the resulting JAR file will be located
 under `/build/libs/tutorbot.jar`. Please note that a JDK with version 11 or higher is required to build and run this
 tool, this limitation comes from JPlag. 
+
+## Releasing a new version
+Before releasing, check if your changes are merged in the main branch.  
+To release a new version, create and push a `tag` on the main branch with a name like `v*.*`. 
+This can be done with the following commands:
+* `git tag v1.X.X [-a|-s]` (`-a` for unsigned, `-s` for signed)
+* `git push origin v1.X.X`
+
+The release pipeline is then triggered, which builds and packages the `tutorbot.jar` with files from `/tutorbot` into a zip-file. After that, a GitHub release will be created with the zip-file and the annotation from the tag. 
