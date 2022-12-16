@@ -1,4 +1,5 @@
-[![Build Status](https://img.shields.io/github/workflow/status/jheinzel/tutorbot/CI)](https://github.com/jheinzel/tutorbot/actions)
+
+[![CI](https://github.com/jheinzel/tutorbot/actions/workflows/ci.yml/badge.svg)](https://github.com/jheinzel/tutorbot/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/jheinzel/tutorbot)](https://github.com/jheinzel/tutorbot/releases)
 [![License](https://img.shields.io/github/license/jheinzel/tutorbot)](https://github.com/jheinzel/tutorbot/blob/master/LICENSE)
 
