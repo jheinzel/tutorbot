@@ -16,12 +16,11 @@ https://github.com/jheinzel/tutorbot/releases
 
 Tutorbot comes with a range of different features, it can support you by:
 
+* downloading all reviews for a certain exercise
 * downloading (and extracting) all submissions for a certain exercise
 * checking submissions for plagiarism
-* downloading all reviews for a certain exercise
+* choosing reviews to give feedback on based on the amount of feedbacks a student has received
 * sending feedback emails to students
-* choosing reviews to give feedback to
-* saving amount of feedbacks each student has received
 
 ## Configuration
 
@@ -137,6 +136,7 @@ under `/build/libs/tutorbot.jar`. Please note that a JDK with version 11 or high
 tool, this limitation comes from JPlag. 
 
 ## Releasing a new version
+First the version in the `build.gradle.kts` has to be updated. Then the following steps have to be performed:
 Before releasing, check if your changes are merged in the main branch.  
 To release a new version, create and push a `tag` on the main branch with a name like `v*.*`. 
 This can be done with the following commands:

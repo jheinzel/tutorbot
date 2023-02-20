@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @Command(
     name = "save-feedback",
-    description = ["Should only be run if the feedback count was not saved when choosing the feedbacks. Counts the feedbacks in an exercise folder and updates the feedback CSV file."]
+    description = ["Should only be run if the feedback count was not saved with choose-feedback. Counts the feedbacks in an exercise folder and updates the feedback CSV file."]
 )
 class SaveFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,
