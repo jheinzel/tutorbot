@@ -33,7 +33,7 @@ class MailCommandTest : CommandLineTest() {
         every { getReviewsSubDir() } returns "reviews"
     }
 
-    private val mailCommand = MailCommand(mailClient, saveFeedbackCommand, credentialStore, configHandler)
+    private val mailCommand = MailCommand(mailClient, credentialStore, configHandler)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -118,23 +118,6 @@ class MailCommandTest : CommandLineTest() {
         every { configHandler.getBaseDir() } returns File(fileSystem.directory, "nonexistant").absolutePath
 
         assertThrows<ProgramExitError> { mailCommand.execute() }
-    }
-
-    @Test
-    fun `Save feedback is executed when confirmed`() {
-        systemIn.provideLines("Subject", "Body", "Y", "Y")
-        mailCommand.execute()
-
-        verify { saveFeedbackCommand.execute() }
-        confirmVerified(saveFeedbackCommand)
-    }
-
-    @Test
-    fun `Save feedback is not executed when not confirmed`() {
-        systemIn.provideLines("Subject", "Body", "Y", "N")
-        mailCommand.execute()
-
-        confirmVerified(saveFeedbackCommand)
     }
 
     private fun verifyTestMail(){
