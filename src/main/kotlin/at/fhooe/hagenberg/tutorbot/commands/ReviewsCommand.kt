@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @Command(
     name = "reviews",
-    description = ["Downloads all reviews for a certain exercise"]
+    description = ["Downloads all reviews for a certain exercise optionally also downloading the submissions."]
 )
 class ReviewsCommand @Inject constructor(
     private val moodleClient: MoodleClient,

@@ -1,22 +1,13 @@
 package at.fhooe.hagenberg.tutorbot.components
 
+import at.fhooe.hagenberg.tutorbot.domain.FeedbackCount
+import at.fhooe.hagenberg.tutorbot.domain.Review
 import java.io.File
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class FeedbackHelper @Inject constructor() {
-    // Tracks amount of feedbacks a student has received on submissions and reviews. Ordered by submission first then review.
-    data class FeedbackCount(val submission: Int, val review: Int) : Comparable<FeedbackCount> {
-        override fun compareTo(other: FeedbackCount): Int {
-            return compareValuesBy(this, other, { it.submission }, { it.review })
-        }
-    }
-
-    // Represents a Review, which has a student who submitted the code and one who reviewed it.
-    data class Review(
-        val fileName: String,
-        val subStudentNr: String,
-        val revStudentNr: String
-    )
+@Singleton
+class FeedbackFileHelper @Inject constructor() {
 
     /**
      * Reads all review files from a directory matching with the STUDENT_NR_PATTERN ignoring other files.

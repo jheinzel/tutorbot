@@ -1,8 +1,8 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
+import at.fhooe.hagenberg.tutorbot.components.FeedbackFileHelper
+import at.fhooe.hagenberg.tutorbot.domain.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.printlnGreen
 import picocli.CommandLine.Command
@@ -12,11 +12,11 @@ import javax.inject.Inject
 
 @Command(
     name = "save-feedback",
-    description = ["Counts the feedbacks of an exercise and appends the data to the feedback CSV file"]
+    description = ["Should only be run if the feedback count was not saved when choosing the feedbacks. Counts the feedbacks in an exercise folder and updates the feedback CSV file."]
 )
 class SaveFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,
-    private val feedbackHelper: FeedbackHelper
+    private val feedbackFileHelper: FeedbackFileHelper
 ) : BaseCommand() {
     override fun execute() {
         // Current ex. reviews path
@@ -24,14 +24,14 @@ class SaveFeedbackCommand @Inject constructor(
         val exerciseSubDir = configHandler.getExerciseSubDir()
         val reviewsDir = configHandler.getReviewsSubDir()
         val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
-        val feedbackCount = feedbackHelper.readFeedbackCountFromReviews(sourceDirectory.toFile())
+        val feedbackCount = feedbackFileHelper.readFeedbackCountFromReviews(sourceDirectory.toFile())
         if (feedbackCount.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
 
         // Get CSV with count of previous feedbacks
         val feedbackDirPath = configHandler.getFeedbackCsv()
         val feedbackCsv = Path.of(feedbackDirPath).toFile()
         val existingFeedbackCount = try {
-            feedbackHelper.readFeedbackCountFromCsv(feedbackCsv)
+            feedbackFileHelper.readFeedbackCountFromCsv(feedbackCsv)
         } catch (e: FileNotFoundException) {
             mapOf<String, FeedbackCount>() // If file does not exist, just return empty map
         } catch (e: Exception) {
@@ -50,7 +50,7 @@ class SaveFeedbackCommand @Inject constructor(
             }
 
         try {
-            feedbackHelper.writeFeedbackCountToCsv(feedbackCsv, mergedCount)
+            feedbackFileHelper.writeFeedbackCountToCsv(feedbackCsv, mergedCount)
             printlnGreen("Successfully wrote new feedback count to ${feedbackCsv.absolutePath}")
         } catch (e: Exception){
             exitWithError(e.message ?: "Could not write to ${feedbackCsv.absolutePath}")

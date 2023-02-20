@@ -1,8 +1,8 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
+import at.fhooe.hagenberg.tutorbot.components.FeedbackFileHelper
+import at.fhooe.hagenberg.tutorbot.domain.FeedbackCount
 import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.rules.FileSystemRule
 import at.fhooe.hagenberg.tutorbot.util.ProgramExitError
@@ -29,12 +29,12 @@ class SaveFeedbackCommandTest {
         every { getExerciseSubDir() } returns exerciseSubDir
         every { getReviewsSubDir() } returns reviewSubDir
     }
-    private val feedbackHelper = mockk<FeedbackHelper> {
+    private val feedbackFileHelper = mockk<FeedbackFileHelper> {
         every { readFeedbackCountFromReviews(any()) } returns reviewsInFolder
         every { writeFeedbackCountToCsv(any(), capture(feedbackCountWriteCapture)) } returns Unit
     }
 
-    private val saveFeedbackCommand = SaveFeedbackCommand(configHandler, feedbackHelper)
+    private val saveFeedbackCommand = SaveFeedbackCommand(configHandler, feedbackFileHelper)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -46,7 +46,7 @@ class SaveFeedbackCommandTest {
 
     @Test
     fun `When feedback dir empty, exits`() {
-        every { feedbackHelper.readFeedbackCountFromReviews(any()) } returns mapOf()
+        every { feedbackFileHelper.readFeedbackCountFromReviews(any()) } returns mapOf()
 
         assertThrows<ProgramExitError> {
             saveFeedbackCommand.execute()
@@ -55,7 +55,7 @@ class SaveFeedbackCommandTest {
 
     @Test
     fun `When read csv throws exception, exits`() {
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws IOException()
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } throws IOException()
 
         assertThrows<ProgramExitError> {
             saveFeedbackCommand.execute()
@@ -71,7 +71,7 @@ class SaveFeedbackCommandTest {
 
     @Test
     fun `When write throws exception, exits`() {
-        every { feedbackHelper.writeFeedbackCountToCsv(any(), capture(feedbackCountWriteCapture)) } throws IOException()
+        every { feedbackFileHelper.writeFeedbackCountToCsv(any(), capture(feedbackCountWriteCapture)) } throws IOException()
 
         assertThrows<ProgramExitError> {
             saveFeedbackCommand.execute()
@@ -84,7 +84,7 @@ class SaveFeedbackCommandTest {
             "S1" to FeedbackCount(0, 1),
             "S2" to FeedbackCount(0, 1)
         )
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns reviewsInCsv
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns reviewsInCsv
         val expectedFeedbackCount = mapOf(
             "S1" to FeedbackCount(1, 1),
             "S2" to FeedbackCount(0, 2)

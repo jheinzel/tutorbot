@@ -1,9 +1,10 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
+import at.fhooe.hagenberg.tutorbot.components.FeedbackChooseLogic
+import at.fhooe.hagenberg.tutorbot.components.FeedbackFileHelper
+import at.fhooe.hagenberg.tutorbot.domain.FeedbackCount
+import at.fhooe.hagenberg.tutorbot.domain.Review
 import at.fhooe.hagenberg.tutorbot.testutil.CommandLineTest
 import at.fhooe.hagenberg.tutorbot.testutil.assertThrows
 import at.fhooe.hagenberg.tutorbot.testutil.getResource
@@ -25,7 +26,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     private val reviewSubDir = "reviews"
     private val exerciseSubDir = "ue01"
 
-    private val feedbackHelper = mockk<FeedbackHelper> ()
+    private val feedbackFileHelper = mockk<FeedbackFileHelper>()
     private val configHandler = mockk<ConfigHandler> {
         every { getExerciseSubDir() } returns exerciseSubDir
         every { getReviewsSubDir() } returns reviewSubDir
@@ -33,8 +34,9 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     private val random = mockk<Random> {
         every { nextInt(any()) } returns 0
     }
+    private val feedbackChooseLogic = FeedbackChooseLogic(random) // The logic is being tested as part of the command
 
-    private val chooseFeedbackCmd = ChooseFeedbackCommand(configHandler, feedbackHelper, random)
+    private val chooseFeedbackCmd = ChooseFeedbackCommand(configHandler, feedbackFileHelper, feedbackChooseLogic)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -59,7 +61,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
 
     private fun setupTestFiles() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf(
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns setOf(
             Review("S3-S4_S3-S4.pdf", "s3", "s4"),
             Review("S4-S2210101010_S4_TestName.pdf", "s4", "s2210101010")
         )
@@ -72,7 +74,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Exit when review dir is empty`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns setOf()
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns setOf()
 
         assertThrows<ProgramExitError> {
             chooseFeedbackCmd.execute()
@@ -81,7 +83,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Exit when feedbackCount is smaller than 1`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
         every { configHandler.getFeedbackAmount() } returns 0
 
@@ -92,7 +94,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Exit when feedbackRandomCount is greater than feedbackCount`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
         every { configHandler.getFeedbackAmount() } returns 4
         every { configHandler.getFeedbackRandomAmount() } returns 5
@@ -104,7 +106,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Exit when feedbackRandomCount smaller than 0`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
         every { configHandler.getFeedbackAmount() } returns 4
         every { configHandler.getFeedbackRandomAmount() } returns -1
@@ -116,12 +118,12 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `With no feedback csv, the only review is chosen`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
         getResource("pdfs/S1-S2_S1-S2.pdf").copyTo(
             File(reviewLocation, "S1-S2_S1-S2.pdf")
         )
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws FileNotFoundException()
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } throws FileNotFoundException()
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
@@ -132,9 +134,9 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Exits when read feedback count throws IOException`() {
-        every { feedbackHelper.readAllReviewsFromDir(any()) } returns
+        every { feedbackFileHelper.readAllReviewsFromDir(any()) } returns
                 setOf(Review("S1-S2_S1-S2.pdf", "s1", "s2"))
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } throws IOException()
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } throws IOException()
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
@@ -145,10 +147,10 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
     @Test
     fun `Same student cannot be selected for two reviews, prefer student with no feedbacks`() {
-       setupTestFiles()
+        setupTestFiles()
 
         // S4 has feedback, S3 does not, prefer S3
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s4" to FeedbackHelper.FeedbackCount(1, 0))
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s4" to FeedbackCount(1, 0))
         every { configHandler.getFeedbackAmount() } returns 2
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
@@ -162,7 +164,10 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `Same student cannot be selected for two reviews, prefer student with fewer feedbacks`() {
         // S4 has more reviews, so S3 is picked
         setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(2, 1))
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackCount(1, 1),
+            "s4" to FeedbackCount(2, 1)
+        )
         every { configHandler.getFeedbackAmount() } returns 2
         every { configHandler.getFeedbackRandomAmount() } returns 0
 
@@ -176,7 +181,10 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `Random student is selected with same feedback count`() {
         // Both have same amount of reviews, S4 is picked randomly
         setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(1, 1))
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackCount(1, 1),
+            "s4" to FeedbackCount(1, 1)
+        )
         every { random.nextInt(any()) } returns 1 // Take second item which is submission of s4
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 0
@@ -193,7 +201,10 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `Random student is selected regardless of feedback count`() {
         // S4 has more reviews, but is picked because of randomCount
         setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s3" to FeedbackHelper.FeedbackCount(1, 1), "s4" to FeedbackHelper.FeedbackCount(2, 1))
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+            "s3" to FeedbackCount(1, 1),
+            "s4" to FeedbackCount(2, 1)
+        )
         every { random.nextInt(any()) } returns 1 // Take second item which is submission of s4
         every { configHandler.getFeedbackAmount() } returns 1
         every { configHandler.getFeedbackRandomAmount() } returns 1
@@ -210,7 +221,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     fun `Student with fewer reviews than submissions gets selected as reviewer`() {
         // S4 has not gotten any feedbacks on reviews, choose where S4 is reviewer
         setupTestFiles()
-        every { feedbackHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf(
             "s3" to FeedbackCount(1, 1),
             "s4" to FeedbackCount(1, 0)
         )
