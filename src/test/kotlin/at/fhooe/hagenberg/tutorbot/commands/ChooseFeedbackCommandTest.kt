@@ -27,6 +27,7 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     private val exerciseSubDir = "ue01"
 
     private val feedbackFileHelper = mockk<FeedbackFileHelper>()
+    private val saveFeedbackCommand = mockk<SaveFeedbackCommand>()
     private val configHandler = mockk<ConfigHandler> {
         every { getExerciseSubDir() } returns exerciseSubDir
         every { getReviewsSubDir() } returns reviewSubDir
@@ -36,7 +37,8 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
     }
     private val feedbackChooseLogic = FeedbackChooseLogic(random) // The logic is being tested as part of the command
 
-    private val chooseFeedbackCmd = ChooseFeedbackCommand(configHandler, feedbackFileHelper, feedbackChooseLogic)
+    private val chooseFeedbackCmd =
+        ChooseFeedbackCommand(configHandler, feedbackFileHelper, feedbackChooseLogic, saveFeedbackCommand)
 
     @get:Rule
     val fileSystem = FileSystemRule()
@@ -232,5 +234,33 @@ class ChooseFeedbackCommandTest : CommandLineTest() {
 
         verifyExpectedFiles(listOf("S3-S4_S3-S4.pdf"))
         verifyMovedFiles(listOf("S4-S2210101010_S4_TestName.pdf"))
+    }
+
+    @Test
+    fun `When save feedback chosen, calls SaveFeedbackCommand`() {
+        // This configuration should lead to a successful execution of ChooseFeedbackCommand to a point where saving is possible
+        setupTestFiles()
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s4" to FeedbackCount(1, 0))
+        every { configHandler.getFeedbackAmount() } returns 2
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+        systemIn.provideLines("Y")
+
+        chooseFeedbackCmd.execute()
+
+        verify(exactly = 1) { saveFeedbackCommand.execute() }
+    }
+
+    @Test
+    fun `When save feedback not chosen, does not call SaveFeedbackCommand`() {
+        // This configuration should lead to a successful execution of ChooseFeedbackCommand to a point where saving is possible
+        setupTestFiles()
+        every { feedbackFileHelper.readFeedbackCountFromCsv(any()) } returns mapOf("s4" to FeedbackCount(1, 0))
+        every { configHandler.getFeedbackAmount() } returns 2
+        every { configHandler.getFeedbackRandomAmount() } returns 0
+        systemIn.provideLines("N")
+
+        chooseFeedbackCmd.execute()
+
+        confirmVerified(saveFeedbackCommand)
     }
 }

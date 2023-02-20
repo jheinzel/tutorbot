@@ -21,7 +21,8 @@ import javax.inject.Inject
 class ChooseFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,
     private val feedbackFileHelper: FeedbackFileHelper,
-    private val feedbackChooseLogic: FeedbackChooseLogic
+    private val feedbackChooseLogic: FeedbackChooseLogic,
+    private val saveFeedbackCommand: SaveFeedbackCommand
 ) : BaseCommand() {
     override fun execute() {
         // Current ex. reviews path
@@ -60,8 +61,13 @@ class ChooseFeedbackCommand @Inject constructor(
             printlnGreen("Picked $feedbackCount reviews.")
 
         moveReviews(sourceDirectory, reviewsToMove)
-
         printlnGreen("Finished selecting reviews to feedback.")
+
+        if (promptBooleanInput("Save current feedback selection?")) {
+            saveFeedbackCommand.execute()
+        } else {
+            printlnCyan("Feedback selection was not saved. Please save your selection with save-feedback when you are done.")
+        }
     }
 
     private fun moveReviews(
