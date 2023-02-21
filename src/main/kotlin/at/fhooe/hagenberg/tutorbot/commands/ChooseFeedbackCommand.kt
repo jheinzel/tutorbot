@@ -1,19 +1,18 @@
 package at.fhooe.hagenberg.tutorbot.commands
 
 import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.FeedbackCount
-import at.fhooe.hagenberg.tutorbot.components.FeedbackHelper.Review
+import at.fhooe.hagenberg.tutorbot.components.FeedbackChooseLogic
+import at.fhooe.hagenberg.tutorbot.components.FeedbackFileHelper
+import at.fhooe.hagenberg.tutorbot.domain.FeedbackCount
+import at.fhooe.hagenberg.tutorbot.domain.Review
 import at.fhooe.hagenberg.tutorbot.util.exitWithError
 import at.fhooe.hagenberg.tutorbot.util.printlnCyan
 import at.fhooe.hagenberg.tutorbot.util.printlnGreen
 import at.fhooe.hagenberg.tutorbot.util.promptBooleanInput
 import picocli.CommandLine.Command
-import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Path
 import javax.inject.Inject
-import kotlin.random.Random
 
 @Command(
     name = "choose-feedback",
@@ -21,106 +20,17 @@ import kotlin.random.Random
 )
 class ChooseFeedbackCommand @Inject constructor(
     private val configHandler: ConfigHandler,
-    private val feedbackHelper: FeedbackHelper,
-    private val random: Random
+    private val feedbackFileHelper: FeedbackFileHelper,
+    private val feedbackChooseLogic: FeedbackChooseLogic,
+    private val saveFeedbackCommand: SaveFeedbackCommand
 ) : BaseCommand() {
-    /**
-     * Adds the review to the chosenReviews if both participating students are not in the chosenReviews already.
-     * @return true if added
-     */
-    private fun addIfAllowed(review: Review, chosenReviews: MutableCollection<Review>): Boolean =
-        if (chosenReviews.none { r ->
-                r.subStudentNr == review.revStudentNr || r.subStudentNr == review.subStudentNr
-                        || r.revStudentNr == review.revStudentNr || r.revStudentNr == review.subStudentNr
-            }) chosenReviews.add(review) else false
-
-    /**
-     * Tries to pop a Review from the reviews, which either has the student as submitter or reviewer.
-     * @return Review if present in reviews
-     */
-    private fun tryPopReviewForStudent(
-        student: String,
-        reviews: MutableCollection<Review>,
-        asSubmitter: Boolean
-    ): Review? =
-        when (asSubmitter) {
-            true -> reviews.firstOrNull { r -> r.subStudentNr == student }
-            false -> reviews.firstOrNull { r -> r.revStudentNr == student }
-        }?.also { reviews.remove(it) }
-
-    /**
-     * Chooses reviews to be selected for feedback. Students who have gotten the least feedbacks on submissions and reviews are preferred.
-     * Random reviews regardless of their received feedback amount may also be chosen if defined (useful to avoid predictability).
-     */
-    private fun pickReviewsToFeedback(
-        reviews: MutableSet<Review>,
-        feedbackCsv: File,
-        feedbackCount: Int,
-        randomCount: Int
-    ): Set<Review> {
-        val feedbackCountMap = try {
-            feedbackHelper.readFeedbackCountFromCsv(feedbackCsv)
-        } catch (e: FileNotFoundException) {
-            mapOf<String, FeedbackCount>() // If file does not exist, just return empty map
-        } catch (e: Exception) {
-            exitWithError(e.message ?: "Parsing feedback CSV failed.")
-        }
-        val chosenReviews = mutableSetOf<Review>()
-        val canStillPickReviews = { reviews.isNotEmpty() && chosenReviews.size < feedbackCount }
-
-        // 1) Chose random reviews first
-        while (canStillPickReviews() && chosenReviews.size < randomCount) {
-            val review = reviews.random(random).also { reviews.remove(it) }
-            addIfAllowed(review, chosenReviews)
-        }
-
-        if (!canStillPickReviews()) return chosenReviews
-
-        // 2) Choose students who have not gotten any feedback, does not matter if feedback on submission or review
-        val studentsWithNoFeedback = reviews
-            .flatMap { r -> listOf(r.subStudentNr, r.revStudentNr) }
-            .distinct()
-            .filter { s -> s !in feedbackCountMap }
-            .shuffled(random)
-            .toMutableList()
-        while (canStillPickReviews() && studentsWithNoFeedback.isNotEmpty()) {
-            val student = studentsWithNoFeedback.first()
-            studentsWithNoFeedback.remove(student)
-            tryPopReviewForStudent(student, reviews, true)?.also {
-                addIfAllowed(it, chosenReviews)
-            }
-        }
-
-        if (!canStillPickReviews()) return chosenReviews
-
-        // 3) Choose students by ordering amount of feedback received
-        val feedbackOrdering = feedbackCountMap
-            .toList()
-            .filter { pair -> pair.first in reviews.flatMap { r -> listOf(r.subStudentNr, r.revStudentNr) } }
-            .shuffled(random)
-            .sortedBy { pair -> pair.second }
-            .toMutableList()
-        while (canStillPickReviews() && feedbackOrdering.isNotEmpty()) {
-            val picked = feedbackOrdering.first()
-            feedbackOrdering.remove(picked)
-
-            // Try to keep amount of feedbacks on submissions and reviews the same
-            val shouldPickSubmission = picked.second.submission <= picked.second.review
-            tryPopReviewForStudent(picked.first, reviews, shouldPickSubmission)?.also {
-                addIfAllowed(it, chosenReviews)
-            }
-        }
-
-        return chosenReviews
-    }
-
     override fun execute() {
         // Current ex. reviews path
         val baseDir = configHandler.getBaseDir()
         val exerciseSubDir = configHandler.getExerciseSubDir()
         val reviewsDir = configHandler.getReviewsSubDir()
         val sourceDirectory = Path.of(baseDir, exerciseSubDir, reviewsDir)
-        val reviews = feedbackHelper.readAllReviewsFromDir(sourceDirectory.toFile())
+        val reviews = feedbackFileHelper.readAllReviewsFromDir(sourceDirectory.toFile())
         if (reviews.isEmpty()) exitWithError("Reviews folder does not contain any valid files!")
 
         // Get CSV with count of previous feedbacks
@@ -134,8 +44,15 @@ class ChooseFeedbackCommand @Inject constructor(
         if (randomCount < 0 || randomCount > feedbackCount) exitWithError("Random feedback count must be >= 0 and <= feedback count.")
 
         // Pick reviews
+        val feedbackCountMap = try {
+            feedbackFileHelper.readFeedbackCountFromCsv(feedbackCsv)
+        } catch (e: FileNotFoundException) {
+            mapOf<String, FeedbackCount>() // If file does not exist, just return empty map
+        } catch (e: Exception) {
+            exitWithError(e.message ?: "Parsing feedback CSV failed.")
+        }
         val reviewsToFeedback =
-            pickReviewsToFeedback(reviews.toMutableSet(), feedbackCsv, feedbackCount, randomCount)
+            feedbackChooseLogic.pickReviewsToFeedback(feedbackCountMap, reviews, feedbackCount, randomCount)
         val reviewsToMove = reviews - reviewsToFeedback
 
         if (reviewsToFeedback.size != feedbackCount)
@@ -143,6 +60,20 @@ class ChooseFeedbackCommand @Inject constructor(
         else
             printlnGreen("Picked $feedbackCount reviews.")
 
+        moveReviews(sourceDirectory, reviewsToMove)
+        printlnGreen("Finished selecting reviews to feedback.")
+
+        if (promptBooleanInput("Save current feedback selection?")) {
+            saveFeedbackCommand.execute()
+        } else {
+            printlnCyan("Feedback selection was not saved. Please save your selection with save-feedback when you are done.")
+        }
+    }
+
+    private fun moveReviews(
+        sourceDirectory: Path,
+        reviewsToMove: Set<Review>
+    ) {
         val targetDirectory = sourceDirectory.resolve(NOT_SELECTED_DIR)
         if (!targetDirectory.toFile().mkdir()) {
             if (!promptBooleanInput("Target location $targetDirectory already exists, should its contents be overwritten?")) {
@@ -161,8 +92,6 @@ class ChooseFeedbackCommand @Inject constructor(
                 exitWithError(ex.message ?: "Moving ${rev.fileName} failed.")
             }
         }
-
-        printlnGreen("Finished selecting reviews to feedback.")
     }
 
     companion object {

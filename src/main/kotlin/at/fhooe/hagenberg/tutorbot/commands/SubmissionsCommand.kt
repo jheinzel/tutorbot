@@ -33,25 +33,22 @@ class SubmissionsCommand @Inject constructor(
         execute(null, null)
     }
 
-    fun execute(assignmentUrl: String?, submissionOptions: Triple<Boolean, Boolean, Boolean>?){
+    fun execute(assignmentUrl: String?, submissionOptions: Triple<Boolean, Boolean, Boolean>?) {
         authenticator.authenticate()
 
-        val targetDirectory = setupTargetDirectory()
-
+        val submissionsDirectory = setupTargetDirectory()
         val url = assignmentUrl ?: promptTextInput("Enter assignment URL:")
-
         val (deleteArchives, checkPlagiarism, deleteSubmissions) = submissionOptions ?: promptForSubmissionOptions()
-
 
         var downloadLinks = getAllDownloadLinks(url)
         while (downloadLinks.isEmpty()) {
             printlnRed("Could not find any submissions to download")
-            if(!promptBooleanInput("Try again? (Y/N)")){
+            if (!promptBooleanInput("Try again? (Y/N)")) {
                 exitProcess(0)
             }
             downloadLinks = getAllDownloadLinks(promptTextInput("Enter assignment URL:"))
         }
-        val files = downloadLinks.map { link -> File(targetDirectory, getFileName(link)) }
+        val files = downloadLinks.map { link -> File(submissionsDirectory, getFileName(link)) }
 
         // Download and unzip all submitted solutions
         val submissions = downloadLinks.zip(files)
@@ -67,7 +64,10 @@ class SubmissionsCommand @Inject constructor(
 
         // Check the results for plagiarism if wanted
         if (checkPlagiarism) {
-            plagiarismChecker.generatePlagiarismReport(targetDirectory)
+            val baseDir = configHandler.getBaseDir()
+            val exerciseSubDir = configHandler.getExerciseSubDir()
+            val targetDirectory = File(baseDir, exerciseSubDir)
+            plagiarismChecker.generatePlagiarismReport(submissionsDirectory, targetDirectory)
         }
 
         // Delete the downloaded submissions if wanted
@@ -83,7 +83,8 @@ class SubmissionsCommand @Inject constructor(
     }
 
     private fun getAllDownloadLinks(assignmentUrl: String): List<String> = try {
-        val assignmentPage = moodleClient.getHtmlDocument(assignmentUrl) // Query the links to all submission detail pages
+        val assignmentPage =
+            moodleClient.getHtmlDocument(assignmentUrl) // Query the links to all submission detail pages
         val detailUrls = assignmentPage.select(".submission a.title").map { element -> element.href() }
 
         // Follow the links to all detail pages and extract the real download URL
@@ -102,7 +103,7 @@ class SubmissionsCommand @Inject constructor(
 
 }
 
-fun promptForSubmissionOptions(): Triple<Boolean, Boolean, Boolean>{
+fun promptForSubmissionOptions(): Triple<Boolean, Boolean, Boolean> {
     val deleteArchives = promptBooleanInput("Do you want to delete the extracted archives?")
     val checkPlagiarism = promptBooleanInput("Do you want to check submissions for plagiarism?")
     val deleteSubmissions = promptBooleanInput("Do you want to delete the downloaded submissions again?")

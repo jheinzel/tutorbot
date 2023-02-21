@@ -91,8 +91,9 @@ class SubmissionsCommandTest : CommandLineTest() {
     }
 
     private fun verifySubmissions(archiveExists: Boolean = false, submissionExists: Boolean = false) {
-        val submissionsLoc = Path.of(fileSystem.directory.absolutePath, exerciseLoc, submissionsLoc).toString()
-        verify { plagiarismChecker.generatePlagiarismReport(File(submissionsLoc)) }
+        val submissionsLoc = Path.of(fileSystem.directory.absolutePath, exerciseLoc, submissionsLoc).toFile()
+        val outputLoc = Path.of(fileSystem.directory.absolutePath, exerciseLoc).toFile()
+        verify { plagiarismChecker.generatePlagiarismReport(submissionsLoc, outputLoc) }
         assertEquals(archiveExists, File(submissionsLoc, "submission.zip").exists())
         assertEquals(submissionExists, File(submissionsLoc, "submission/submission.pdf").exists())
     }
