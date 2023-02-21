@@ -12,7 +12,7 @@ import javax.mail.AuthenticationFailedException
 
 @Command(
     name = "mail",
-    description = ["Sends PDFs containing the feedback via email"]
+    description = ["Sends PDFs containing the feedback via email."]
 )
 class MailCommand @Inject constructor(
     private val mailClient: MailClient,

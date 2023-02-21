@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @Command(
     name = "plagiarism",
-    description = ["Checks downloaded submissions for plagiarism"]
+    description = ["Checks downloaded submissions for plagiarism."]
 )
 class PlagiarismCommand @Inject constructor(
     private val plagiarismChecker: PlagiarismChecker,

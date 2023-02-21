@@ -5,7 +5,7 @@ import javax.inject.Inject
 
 @Command(
     name = "version",
-    description = ["Shows tutorbot version information"]
+    description = ["Shows tutorbot version information."]
 )
 class VersionCommand @Inject constructor() : BaseCommand() {
 
