@@ -13,6 +13,7 @@ class InstructionsCommand @Inject constructor() : BaseCommand() {
         println("To review a homework, the following steps need to be taken:")
         println("- Download all the reviews (use the reviews command). May also download submissions to skip the next step.")
         println("- Download all the submissions and check for plagiarism (use the download submissions command).")
+        println("- Check the plagiarism report (index.html) and if there are errors parser.log will have more information.")
         println("- Select reviews randomly by using the choose-feedback command or manually making sure everybody gets chosen fairly.")
         println("- If you have not done it already in the choose-feedback command, save the feedback count using the save-feedback command. This data will be used for choosing reviews next time.")
         println("- Add your feedback to the selected reviews.")
