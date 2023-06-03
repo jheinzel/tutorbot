@@ -1,6 +1,7 @@
 package at.fhooe.hagenberg.tutorbot.network
 
 import at.fhooe.hagenberg.tutorbot.auth.MailAuthenticator
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import io.mockk.*
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -13,9 +14,17 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
 class MailClientTest {
+    private val mailServer = "mail.server"
+    private val mailPort = "777"
+
     private val mailAuthenticator = mockk<MailAuthenticator>()
 
-    private val mailClient = MailClient(mailAuthenticator)
+    private val configHandler = mockk<ConfigHandler> {
+        every { getEmailServer() } returns mailServer
+        every { getEmailPort() } returns mailPort
+    }
+
+    private val mailClient = MailClient(mailAuthenticator, configHandler)
 
     private val mailSlot = slot<MimeMessage>()
 
@@ -38,9 +47,9 @@ class MailClientTest {
 
         assertEquals("true", session.properties["mail.smtp.auth"])
         assertEquals("true", session.properties["mail.smtp.starttls.enable"])
-        assertEquals("smtps.fh-ooe.at", session.properties["mail.smtp.host"])
-        assertEquals("587", session.properties["mail.smtp.port"])
-        assertEquals("smtps.fh-ooe.at", session.properties["mail.smtp.ssl.trust"])
+        assertEquals(mailServer, session.properties["mail.smtp.host"])
+        assertEquals(mailPort, session.properties["mail.smtp.port"])
+        assertEquals(mailServer, session.properties["mail.smtp.ssl.trust"])
     }
 
     @Test

@@ -35,6 +35,9 @@ class ConfigHandler @Inject constructor(@Named("config") config: File) {
     fun getEmailUsername(): String? = getProperty("email.username")
     fun getEmailPassword(): String? = getProperty("email.password")
     fun getStudentsEmailSuffix(): String = getProperty("email.students.suffix") ?: "fhooe.at"
+    fun getEmailServer(): String = getProperty("email.server") ?: "smtp.office365.com"
+    fun getEmailPort(): String = getProperty("email.port") ?: "587"
+    fun getEmailFailureDelay(): String = getProperty("email.failuredelay") ?: "5000"
     fun getEmailSubjectTemplate(): String? = getProperty("email.template.subject")
     fun getEmailBodyTemplate(): String? = getProperty("email.template.body")
 

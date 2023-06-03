@@ -45,7 +45,8 @@ class MailCommand @Inject constructor(
                 printlnGreen("success!")
                 break
             } catch (authEx: AuthenticationFailedException) {
-                printlnRed("Password is not correct, try again")
+                printlnRed("Authentication failed. Please try again.")
+                authEx.message?.also { printlnRed(it) }
                 credentialStore.setEmailPassword(promptPasswordInput("Enter email password:"))
             } catch (exception: Exception){
                 exitWithError("${exception.message}")
@@ -58,6 +59,7 @@ class MailCommand @Inject constructor(
             MailClient.Mail(from, listOf(getStudentEmail(submitter), getStudentEmail(reviewer)), subject, body, pdf)
         }
 
+        val delayOnFailure = try { configHandler.getEmailFailureDelay().toLong() } catch (e: Exception) { 5000L }
         // Confirm before sending messages -> just to be safe
         if (promptBooleanInput("Do you want to send ${mails.size} emails?")) {
             println("Sending Emails to:")
@@ -67,7 +69,8 @@ class MailCommand @Inject constructor(
                     mailClient.sendMail(mail)
                     printlnGreen("success")
                 } catch (exception: Exception) {
-                    printlnRed("failed (${exception::class.java.typeName}; ${exception.message})")
+                    printlnRed("failed (${exception::class.java.typeName}; ${exception.message}) retrying after delay")
+                    Thread.sleep(delayOnFailure)
                 }
             }
         }

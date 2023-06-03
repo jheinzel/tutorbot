@@ -1,5 +1,6 @@
 package at.fhooe.hagenberg.tutorbot.auth
 
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
