@@ -1,6 +1,7 @@
 package at.fhooe.hagenberg.tutorbot.network
 
 import at.fhooe.hagenberg.tutorbot.auth.MailAuthenticator
+import at.fhooe.hagenberg.tutorbot.components.ConfigHandler
 import java.io.File
 import java.util.*
 import javax.inject.Inject
@@ -15,7 +16,8 @@ import javax.mail.internet.MimeMultipart
 
 @Singleton
 class MailClient @Inject constructor(
-    private val authenticator: MailAuthenticator
+    private val authenticator: MailAuthenticator,
+    private val configHandler: ConfigHandler
 ) {
     private val session by lazy { Session.getInstance(getSettings(), authenticator) }
 
@@ -41,9 +43,9 @@ class MailClient @Inject constructor(
     private fun getSettings() = Properties().apply {
         put("mail.smtp.auth", "true")
         put("mail.smtp.starttls.enable", "true")
-        put("mail.smtp.host", "smtps.fh-ooe.at")
-        put("mail.smtp.port", "587")
-        put("mail.smtp.ssl.trust", "smtps.fh-ooe.at")
+        put("mail.smtp.host", configHandler.getEmailServer())
+        put("mail.smtp.port", configHandler.getEmailPort())
+        put("mail.smtp.ssl.trust", configHandler.getEmailServer())
     }
 
     data class Mail(val from: String,

@@ -67,6 +67,9 @@ have '.' instead of '_'):
 | `TUTORBOT_EMAIL_TEMPLATE_SUBJECT`           | Template string for the subject of E-Mails sent to students. %s is used as placeholder.                                                   |
 | `TUTORBOT_EMAIL_TEMPLATE_BODY`              | Template string for the body of E-Mails sent to students. %s is used as placeholder.                                                      |
 | `TUTORBOT_EMAIL_STUDENTS_SUFFIX`            | Suffix of E-Mail addresses of students (default fhooe.at).                                                                                |
+| `TUTORBOT_EMAIL_SERVER`                     | E-Mail host server (SSL enabled, default smtp.office365.com).                                                                             |
+| `TUTORBOT_EMAIL_PORT`                       | E-Mail host server port (default 587).                                                                                                    |
+| `TUTORBOT_EMAIL_FAILUREDELAY`               | Delay between sending mails when failure occurred (default 5000ms).                                                                       |
 | `TUTORBOT_LOCATION_BASEDIR`                 | Base-location where Tutorbot will create other folders.                                                                                   |
 | `TUTORBOT_LOCATION_EXERCISE_SUBDIR`         | Subfolder of basedir for the exercise.                                                                                                    |
 | `TUTORBOT_LOCATION_SUBMISSIONS_SUBDIR`      | Subfolder of exercise as download location for submissions.                                                                               |
